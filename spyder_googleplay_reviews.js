@@ -27,28 +27,29 @@ appId = 'com.YoStarJP.Arknights'
 country = 'jp'
 var date = new Date().Format("yyyy-MM-dd hh:mm:ss")
 
-// const pool = mysql.createPool({
-// 	host: "spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com",
-// 	user:"admin",
-// 	password:"Pjy#0618",
-// 	database: "spyder"
-// })
-// gplay.app({appId: appId ,country: country})
-// 	.then((body)=>{
-// 	    ratings = [appId,country,'googlplay',date, body['reviews'],body['score'],body['ratings'],body['histogram']['1'],body['histogram']['2'],body['histogram']['3'],body['histogram']['4'],body['histogram']['5'] ]
-// 	console.log(ratings)
-//   pool.getConnection(function(err,con){
-//     if (err) {
-//       console.log(err);
-//     }else{
-//       con.query('insert into customer_ratings values(?,?,?,?,?,?,?,?,?,?,?,?)',ratings,function(err, results, fields){
-//         if (err) {
-//           console.log(err);
-//         }
-//       })
-//     }
-//   })
-// });
+const pool = mysql.createPool({
+	host: "spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com",
+	user:"admin",
+	password:"Pjy#0618",
+	database: "spyder"
+})
+
+gplay.app({appId: appId ,country: country})
+	.then((body)=>{
+    ratings = [appId,country,'googlplay',date, body['reviews'],body['score'],body['ratings'],body['histogram']['1'],body['histogram']['2'],body['histogram']['3'],body['histogram']['4'],body['histogram']['5'] ]
+	  console.log(ratings)
+    // pool.getConnection(function(err,con){
+    //   if (err) {
+    //     console.log(err);
+    //   }else{
+    //     con.query('insert into customer_ratings values(?,?,?,?,?,?,?,?,?,?,?,?)',ratings,function(err, results, fields){
+    //       if (err) {
+    //         console.log(err);
+    //       }
+    //     })
+    //   }
+    // })
+});
 
 gplay.reviews({
   appId: appId,
