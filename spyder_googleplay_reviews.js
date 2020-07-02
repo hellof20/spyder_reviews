@@ -46,16 +46,17 @@ gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
     })
   })
 
+  connection.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
+    if(err){console.log(err)}
+  })
+
   for (var i = 0;i<body.length;i++){
     reviews = [appId,country,'googlplay',body[i]['date'],body[i]['userName'],body[i]['title'],body[i]['text'],body[i]['score']]
-    con.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
-      if(err){console.log(err)}
-      else{
-        connection.query('insert into customer_reviews values(?,?,?,?,?,?,?,?)',reviews,function(err, results){
-          if (err) {console.log(err)}
-        })
-      }
+    connection.query('insert into customer_reviews values(?,?,?,?,?,?,?,?)',reviews,function(err, results){
+      if (err) {console.log(err)}
     })
   }
+
+  connection.end()
 
 })
