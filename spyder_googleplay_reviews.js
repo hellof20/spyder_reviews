@@ -27,57 +27,35 @@ appId = 'com.YoStarJP.Arknights'
 country = 'jp'
 var date = new Date().Format("yyyy-MM-dd hh:mm:ss")
 
-const pool = mysql.createPool({
+var connection = mysql.createConnection({
 	host: "spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com",
 	user:"admin",
 	password:"Pjy#0618",
 	database: "spyder"
 });
 
-gplay.reviews({
-  appId: appId,
-  country:country,
-	num:200000,
-  sort: gplay.sort.RATING
-}).then((body)=>{
+gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
   reviewsnum = body.length;
   console.log(reviewsnum);
-	pool.getConnection(function(err,con){
-    if (err) {
-      console.log(err);
-    }else{
+  gplay.app({appId: appId})
+  .then((body)=>{
+    ratings = [appId,country,'googlplay',date, reviewsnum, body['score'],body['ratings'],body['histogram']['1'],body['histogram']['2'],body['histogram']['3'],body['histogram']['4'],body['histogram']['5'] ]
+    console.log(ratings)
+    connection.query('insert into customer_ratings values(?,?,?,?,?,?,?,?,?,?,?,?)',ratings,function(err, results){
+      if(err){console.log(err)}
+    })
+  })
 
-      gplay.app({appId: appId ,country: country})
-      .then((body)=>{
-        ratings = [appId,country,'googlplay',date, reviewsnum, body['score'],body['ratings'],body['histogram']['1'],body['histogram']['2'],body['histogram']['3'],body['histogram']['4'],body['histogram']['5'] ]
-        console.log(ratings)
-        pool.getConnection(function(err,con){
-          if (err) {
-            console.log(err);
-          }else{
-            con.query('insert into customer_ratings values(?,?,?,?,?,?,?,?,?,?,?,?)',ratings,function(err, results, fields){
-              if (err) {
-                console.log(err);
-              }
-            })
-          }
-        })
-      });
-
-	    for (var i = 0;i<body.length;i++){
-        reviews = [appId,country,'googlplay',body[i]['date'],body[i]['userName'],body[i]['title'],body[i]['text'],body[i]['score']]
-        con.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
-          if(err){
-            console.log(err);
-          }else{
-            con.query('insert into customer_reviews values(?,?,?,?,?,?,?,?)',reviews,function(err, results, fields){
-              if (err) {
-                console.log(err);
-              }
-            })
-          }
+  for (var i = 0;i<body.length;i++){
+    reviews = [appId,country,'googlplay',body[i]['date'],body[i]['userName'],body[i]['title'],body[i]['text'],body[i]['score']]
+    con.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
+      if(err){console.log(err)}
+      else{
+        connection.query('insert into customer_reviews values(?,?,?,?,?,?,?,?)',reviews,function(err, results){
+          if (err) {console.log(err)}
         })
       }
-    }
-  })
+    })
+  }
+
 })
