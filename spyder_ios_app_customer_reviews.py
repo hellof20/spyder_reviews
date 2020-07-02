@@ -13,14 +13,11 @@ def main():
     #appid = input("请输入应用id号：")
     #reviews_num = input("获取评论数量：")
     #country = input("国家代号：")
-    appid = '1278845241'
+    appid = '1464872022'
     #reviews_num = '2'
-    country = 'cn'
-    #appid = '841140063'
-    #reviews_num = '2'
-    #country = 'cn'
+    country = 'us'
 
-    connect = create_engine('mysql+pymysql://admin:Pjy#0618@mysql.chjiy0juen00.rds.cn-northwest-1.amazonaws.com.cn:3306/spyder?charset=utf8')
+    connect = create_engine('mysql+pymysql://admin:Pjy#0618@spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com:3306/spyder?charset=utf8')
     previousReviews = connect.execute('select max(totalNumberOfReviews) from customer_ratings where appid ="'+ appid +'"')
     previousReviewsNum = previousReviews.fetchall()[0][0]
     if previousReviewsNum is None:
