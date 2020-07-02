@@ -36,23 +36,22 @@ var connection = mysql.createConnection({
 
 gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
 	reviewsdata = body;
-   reviewsnum = body.length;
-  console.log(reviewsnum);
+  reviewsnum = body.length;
   gplay.app({appId: appId})
   .then((body)=>{
     ratings = [appId,country,'googlplay',date, reviewsnum, body['score'],body['ratings'],body['histogram']['1'],body['histogram']['2'],body['histogram']['3'],body['histogram']['4'],body['histogram']['5'] ]
-    console.log(ratings)
     connection.query('insert into customer_ratings values(?,?,?,?,?,?,?,?,?,?,?,?)',ratings,function(err, results){
       if(err){console.log(err)}
       else{
         connection.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
           if(err){console.log(err)}
           else{
-		              var reviews = [];
+		        var reviews = [];
             for (var i = 0;i<reviewsnum;i++){
-              reviews.push({'appid':appId,'country':country,'platform':'googlplay','date':reviewsdata[i]['date'],'name':reviewsdata[i]['userName'],'title':reviewsdata[i]['title'],'content':reviewsdata[i]['text'],'rating':reviewsdata[i]['score']})
+              //reviews.push({'appid':appId,'country':country,'platform':'googlplay','date':reviewsdata[i]['date'],'name':reviewsdata[i]['userName'],'title':reviewsdata[i]['title'],'content':reviewsdata[i]['text'],'rating':reviewsdata[i]['score']})
+              reviews.push([appId,country,'googlplay',reviewsdata[i]['date'],reviewsdata[i]['userName'],reviewsdata[i]['title'],reviewsdata[i]['text'],reviewsdata[i]['score'] ])
             }
-            connection.query('insert into customer_reviews set ?',reviews,function(err, results){
+            connection.query('insert into customer_reviews values ?',reviews,function(err, results){
               if (err) {console.log(err)}
               connection.end()
             })
