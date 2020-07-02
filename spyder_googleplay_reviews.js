@@ -43,20 +43,20 @@ gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
     console.log(ratings)
     connection.query('insert into customer_ratings values(?,?,?,?,?,?,?,?,?,?,?,?)',ratings,function(err, results){
       if(err){console.log(err)}
+      else{
+        connection.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
+          if(err){console.log(err)}
+          else{
+            for (var i = 0;i<body.length;i++){
+              reviews.push({"appid":appId,"country":country,'platform':'googlplay','date':body[i]['date'],'name':body[i]['userName'],'title':body[i]['title'],'content':body[i]['text'],'rating':body[i]['score']})
+            }
+            connection.query('insert into customer_reviews set ?',reviews,function(err, results){
+              if (err) {console.log(err)}
+              connection.end()
+            })
+          }
+        })
+      }
     })
   })
-
-  connection.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
-    if(err){console.log(err)}
-  })
-
-  for (var i = 0;i<body.length;i++){
-    reviews = [appId,country,'googlplay',body[i]['date'],body[i]['userName'],body[i]['title'],body[i]['text'],body[i]['score']]
-    connection.query('insert into customer_reviews values(?,?,?,?,?,?,?,?)',reviews,function(err, results){
-      if (err) {console.log(err)}
-    })
-  }
-
-  connection.end()
-
 })
