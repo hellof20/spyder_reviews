@@ -35,7 +35,8 @@ var connection = mysql.createConnection({
 });
 
 gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
-  reviewsnum = body.length;
+	reviewsdata = body;
+   reviewsnum = body.length;
   console.log(reviewsnum);
   gplay.app({appId: appId})
   .then((body)=>{
@@ -47,8 +48,9 @@ gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
         connection.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
           if(err){console.log(err)}
           else{
-            for (var i = 0;i<body.length;i++){
-              reviews.push({"appid":appId,"country":country,'platform':'googlplay','date':body[i]['date'],'name':body[i]['userName'],'title':body[i]['title'],'content':body[i]['text'],'rating':body[i]['score']})
+		              var reviews = [];
+            for (var i = 0;i<reviewsnum;i++){
+              reviews.push({'appid':appId,'country':country,'platform':'googlplay','date':reviewsdata[i]['date'],'name':reviewsdata[i]['userName'],'title':reviewsdata[i]['title'],'content':reviewsdata[i]['text'],'rating':reviewsdata[i]['score']})
             }
             connection.query('insert into customer_reviews set ?',reviews,function(err, results){
               if (err) {console.log(err)}
