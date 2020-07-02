@@ -66,7 +66,7 @@ gplay.reviews({
 
 	    for (var i = 0;i<body.length;i++){
         reviews = [appId,country,'googlplay',body[i]['date'],body[i]['userName'],body[i]['title'],body[i]['text'],body[i]['score']]
-        con.query('delete from customer_reviews where appId = "'+ appId + '"',function(err,results){
+        con.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
           if(err){
             console.log(err);
           }else{
