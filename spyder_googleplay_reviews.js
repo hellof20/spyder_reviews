@@ -15,15 +15,8 @@ Date.prototype.Format = function(fmt) { //author: meizz
         if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
     return fmt;
 }
-/*
-gplay.search({
-    term: "Arknights",
-    num: 2,
-    country: 'jp'
-  }).then(console.log, console.log);
-*/
 
-appId = 'com.YoStarJP.Arknights'
+appId = 'com.YoStarJP.AzurLane'
 country = 'jp'
 var date = new Date().Format("yyyy-MM-dd hh:mm:ss")
 
@@ -51,7 +44,6 @@ gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
               //reviews.push({'appid':appId,'country':country,'platform':'googlplay','date':reviewsdata[i]['date'],'name':reviewsdata[i]['userName'],'title':reviewsdata[i]['title'],'content':reviewsdata[i]['text'],'rating':reviewsdata[i]['score']})
               reviews.push([appId,country,'googlplay',reviewsdata[i]['date'],reviewsdata[i]['userName'],reviewsdata[i]['title'],reviewsdata[i]['text'],reviewsdata[i]['score'] ])
             }
-		  console.log(reviews)
             connection.query('insert into customer_reviews values ?',[reviews],function(err, results){
               if (err) {console.log(err)}
               connection.end()
