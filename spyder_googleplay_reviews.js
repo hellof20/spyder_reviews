@@ -41,7 +41,6 @@ gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
           else{
 		        var reviews = [];
             for (var i = 0;i<reviewsnum;i++){
-              //reviews.push({'appid':appId,'country':country,'platform':'googlplay','date':reviewsdata[i]['date'],'name':reviewsdata[i]['userName'],'title':reviewsdata[i]['title'],'content':reviewsdata[i]['text'],'rating':reviewsdata[i]['score']})
               reviews.push([appId,country,'googlplay',reviewsdata[i]['date'],reviewsdata[i]['userName'],reviewsdata[i]['title'],reviewsdata[i]['text'],reviewsdata[i]['score'] ])
             }
             connection.query('insert into customer_reviews values ?',[reviews],function(err, results){
