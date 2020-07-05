@@ -13,8 +13,9 @@ def main():
     #appid = input("请输入应用id号：")
     #reviews_num = input("获取评论数量：")
     #country = input("国家代号：")
+    appname = 'AzurLane'
+    platform = 'ios'
     appid = '1242186587'
-    #reviews_num = '2'
     country = 'jp'
 
     connect = create_engine('mysql+pymysql://admin:Pjy#0618@spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com:3306/spyder?charset=utf8')
@@ -31,9 +32,9 @@ def main():
     ratingresponse = urllib.request.urlopen(ratingrequest)
     ratingjson = json.loads(ratingresponse.read().decode())
     totalNumberOfReviews = ratingjson['totalNumberOfReviews']
-    ratingname = ['appid','country','platform','date','totalNumberOfReviews','ratingAverage','ratingCount','1stars','2stars','3stars','4starts','5stars']
+    ratingname = ['appname','country','platform','date','totalNumberOfReviews','ratingAverage','ratingCount','1stars','2stars','3stars','4starts','5stars']
     rating_result_list = []
-    rating_result_list.append( [ appid,country,'ios',time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ratingjson['totalNumberOfReviews'],ratingjson['ratingAverage'],ratingjson['ratingCount'],ratingjson['ratingCountList'][0],ratingjson['ratingCountList'][1],ratingjson['ratingCountList'][2],ratingjson['ratingCountList'][3],ratingjson['ratingCountList'][4] ])
+    rating_result_list.append( [ appid,country,platform,time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), ratingjson['totalNumberOfReviews'],ratingjson['ratingAverage'],ratingjson['ratingCount'],ratingjson['ratingCountList'][0],ratingjson['ratingCountList'][1],ratingjson['ratingCountList'][2],ratingjson['ratingCountList'][3],ratingjson['ratingCountList'][4] ])
     ratingdf = pd.DataFrame(columns=ratingname, data=rating_result_list)
     
     result_list = []
@@ -52,8 +53,8 @@ def main():
         result_list = []
         for i in range(len(reviews)):
             values = reviews[i]
-            result_list.append([ appid, country, 'ios', values['date'], values['name'], values['title'], values['body'], values['rating'] ])
-        name = ['appid','country','platform','date', 'name', 'title', 'content', 'rating']
+            result_list.append([ appid, country, platform, values['date'], values['name'], values['title'], values['body'], values['rating'] ])
+        name = ['appname','country','platform','date', 'name', 'title', 'content', 'rating']
         reviewdf = pd.DataFrame(columns=name, data=result_list)
         print('begin write reviews ...') 
         reviewdf.to_sql("customer_reviews", connect, if_exists='append', index=False)
