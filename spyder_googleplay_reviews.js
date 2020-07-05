@@ -17,7 +17,9 @@ Date.prototype.Format = function(fmt) { //author: meizz
 }
 
 appId = 'com.YoStarJP.AzurLane'
+appname = 'AzurLane'
 country = 'jp'
+platform = 'googlplay'
 var date = new Date().Format("yyyy-MM-dd hh:mm:ss")
 
 var connection = mysql.createConnection({
@@ -32,16 +34,16 @@ gplay.reviews({appId: appId, num:200000,sort: gplay.sort.RATING}).then((body)=>{
   reviewsnum = body.length;
   gplay.app({appId: appId})
   .then((body)=>{
-    ratings = [appId,country,'googlplay',date, reviewsnum, body['score'],body['ratings'],body['histogram']['1'],body['histogram']['2'],body['histogram']['3'],body['histogram']['4'],body['histogram']['5'] ]
+    ratings = [appname,country,platform,date, reviewsnum, body['score'],body['ratings'],body['histogram']['1'],body['histogram']['2'],body['histogram']['3'],body['histogram']['4'],body['histogram']['5'] ]
     connection.query('insert into customer_ratings values(?,?,?,?,?,?,?,?,?,?,?,?)',ratings,function(err, results){
       if(err){console.log(err)}
       else{
-        connection.query('delete from customer_reviews where appid = "'+ appId + '"',function(err,results){
+        connection.query('delete from customer_reviews where appname = "'+ appname + '" and country = "'+ country +'" and platform= "'+ platform+'"',function(err,results){
           if(err){console.log(err)}
           else{
 		        var reviews = [];
             for (var i = 0;i<reviewsnum;i++){
-              reviews.push([appId,country,'googlplay',reviewsdata[i]['date'],reviewsdata[i]['userName'],reviewsdata[i]['title'],reviewsdata[i]['text'],reviewsdata[i]['score'] ])
+              reviews.push([appname,country,platform,reviewsdata[i]['date'],reviewsdata[i]['userName'],reviewsdata[i]['title'],reviewsdata[i]['text'],reviewsdata[i]['score'] ])
             }
             connection.query('insert into customer_reviews values ?',[reviews],function(err, results){
               if (err) {console.log(err)}
