@@ -19,7 +19,7 @@ def main():
     country = 'jp'
 
     connect = create_engine('mysql+pymysql://admin:Pjy#0618@spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com:3306/spyder?charset=utf8')
-    previousReviews = connect.execute('select max(totalNumberOfReviews) from customer_ratings where appid ="'+ appid +'"')
+    previousReviews = connect.execute('select max(totalNumberOfReviews) from customer_ratings where appname ="'+ appname +'" and platform = "'+ platform +'" and country = "' +country+ '"')
     previousReviewsNum = previousReviews.fetchall()[0][0]
     if previousReviewsNum is None:
         previousReviewsNum = 0
