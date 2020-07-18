@@ -35,7 +35,7 @@ def main():
                 return ratingdf
             if self.platform == 'GooglePlay':
                 result = app(
-                    self.appname,
+                    self.appid,
                     country=self.country)
                 totalNumberOfReviews = result['reviews']
                 ratingname = ['appname','country','platform','date','totalNumberOfReviews','ratingAverage','ratingCount','1stars','2stars','3stars','4starts','5stars']
@@ -64,7 +64,7 @@ def main():
 
             if self.platform == 'GooglePlay':
                 reviews_result = reviews_all(
-                    self.appname,
+                    self.appid,
                     country=self.country,
                     sort=Sort.MOST_RELEVANT)
                 reviews_result_list = []
@@ -80,11 +80,21 @@ def main():
     Arknights_AppStore_jp = App('Arknights','AppStore','jp','1478990007')
     AzurLane_AppStore_us = App('AzurLane','AppStore','us','1411126549')
     AzurLane_AppStore_jp = App('AzurLane','AppStore','jp','1242186587')
-    Arknights_GooglePlay_jp = App('com.YoStarJP.Arknights','GooglePlay','jp','')
-    Arknights_GooglePlay_us = App('com.YoStarEN.Arknights','GooglePlay','us','')
-    AzurLane_GooglePlay_jp = App('com.YoStarJP.AzurLane','GooglePlay','jp','')
-    AzurLane_GooglePlay_us = App('com.YoStarEN.AzurLane','GooglePlay','us','')
+    Arknights_GooglePlay_jp = App('Arknights','GooglePlay','jp','com.YoStarJP.Arknights')
+    Arknights_GooglePlay_us = App('Arknights','GooglePlay','us','com.YoStarEN.Arknights')
+    AzurLane_GooglePlay_jp = App('AzurLane','GooglePlay','jp','com.YoStarJP.AzurLane')
+    AzurLane_GooglePlay_us = App('AzurLane','GooglePlay','us','com.YoStarEN.AzurLane')
 
+    # print(Arknights_AppStore_jp.appinfo(),'customer_ratings')
+    # print(AzurLane_GooglePlay_jp.appinfo(),'customer_ratings')
+    # print(Arknights_AppStore_us.reviews(),'customer_reviews')
+    # print(Arknights_AppStore_jp.reviews(),'customer_reviews')
+    # print(Arknights_GooglePlay_us.reviews(),'customer_reviews')
+    # print(Arknights_GooglePlay_jp.reviews(),'customer_reviews')
+    # print(AzurLane_AppStore_us.reviews(),'customer_reviews')
+    # print(AzurLane_AppStore_jp.reviews(),'customer_reviews')
+    # print(AzurLane_GooglePlay_us.reviews(),'customer_reviews')
+    # print(AzurLane_GooglePlay_jp.reviews(),'customer_reviews')
     def truncate_reviews():
         conn = pymysql.connect(host="spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com",user="admin",password="Pjy#0618",database="spyder",charset="utf8")
         cursor = conn.cursor()
