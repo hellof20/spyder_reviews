@@ -86,8 +86,9 @@ def main():
     AzurLane_GooglePlay_us = App('com.YoStarEN.AzurLane','GooglePlay','us','')
 
     def truncate_reviews():
-        connect = create_engine('mysql+pymysql://admin:Pjy#0618@spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com:3306/spyder?charset=utf8')
-        connect.query('truncate customer_reviews')
+        conn = pymysql.connect(host="spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com",user="admin",password="Pjy#0618",database="spyder",charset="utf8")
+        cursor = conn.cursor()
+        cursor.execute('truncate table customer_reviews')
 
     def write_mysql(dataframe,tablename):
         connect = create_engine('mysql+pymysql://admin:Pjy#0618@spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com:3306/spyder?charset=utf8')
