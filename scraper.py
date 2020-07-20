@@ -199,7 +199,8 @@ def main():
         except Exception as e:
             pass
         continue
-    result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
+    print(result)
+    # result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
     print("completed")
 if __name__ == '__main__':
     main()
