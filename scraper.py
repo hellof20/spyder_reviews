@@ -125,7 +125,7 @@ def main():
 
     ##调用comprehend对评论数据进行处理
     comprehend = boto3.client('comprehend', region_name='us-east-1')
-    sql_cmd = "select id,appname,country,platform,date,name,title,content,rating from customer_reviews where id not in (select id from customer_reviews_result) limit 10;"
+    sql_cmd = "select id,appname,country,platform,date,name,title,content,rating from customer_reviews where id not in (select id from customer_reviews_result);"
     df = pd.read_sql(sql=sql_cmd, con=connect)
     num = df.shape[0]
     print(num)
@@ -136,7 +136,7 @@ def main():
             appname=df.iloc[lines,1]
             country =df.iloc[lines,2]
             platform=df.iloc[lines,3]
-            date = df.iloc[lines,4]
+            date = str(df.iloc[lines,4])
             name = df.iloc[lines,5]
             title = df.iloc[lines,6]
             content = df.iloc[lines,7]
@@ -198,8 +198,6 @@ def main():
         except Exception as e:
             pass
         continue
-    print(typeof(result['date']))
-    result['date'] = result['date'].dt.strftime('%Y-%m-%d %H:%M:%S')
     result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
     print("completed")
 if __name__ == '__main__':
