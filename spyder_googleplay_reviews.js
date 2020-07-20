@@ -16,8 +16,8 @@ Date.prototype.Format = function(fmt) { //author: meizz
     return fmt;
 }
 
-appId = 'com.YoStarJP.AzurLane'
-appname = 'AzurLane'
+appId = 'com.YoStarJP.Arknights'
+appname = 'Arknights'
 country = 'jp'
 platform = 'googlplay'
 var date = new Date().Format("yyyy-MM-dd hh:mm:ss")
