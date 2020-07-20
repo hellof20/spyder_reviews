@@ -176,6 +176,7 @@ def main():
                         keyword_result_list.append(the_key_word)
                     result.loc[lines,"keyword_result"] = str(keyword_result_list).decode('unicode_escape')
                     keyword=splited
+                    print(keyword)
                     result.loc[lines,"keyword"] = str(keyword)
                     entities = comprehend.detect_entities(Text=content, LanguageCode=code)
                     entity="entity:"+ str(entities['Entities']).decode('unicode_escape')   
