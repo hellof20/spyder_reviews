@@ -166,27 +166,25 @@ def main():
                     result.loc[lines,"content"] = content
                     result.loc[lines,"rating"] = rating
                     phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
-                    print(phrases)
-                    splited=str(phrases['KeyPhrases']).decode('unicode_escape')
+                    splited=str(phrases['KeyPhrases'])
                     keylist=phrases['KeyPhrases']
-                    print(keylist)
                     keyword_result_list=[]
                     entity_result_list=[]
                     for key in keylist:
                         the_key_word=key['Text']
                         print(the_key_word)
                         keyword_result_list.append(the_key_word)
-                    result.loc[lines,"keyword_result"] = str(keyword_result_list).decode('unicode_escape')
+                    result.loc[lines,"keyword_result"] = str(keyword_result_list)
                     keyword=splited
                     print(keyword)
                     result.loc[lines,"keyword"] = str(keyword)
                     entities = comprehend.detect_entities(Text=content, LanguageCode=code)
-                    entity="entity:"+ str(entities['Entities']).decode('unicode_escape')   
+                    entity="entity:"+ str(entities['Entities'])
                     entitylist=entities['Entities']
                     for entity in entitylist:
                         the_entity_word=key['Text']
                         entity_result_list.append(the_entity_word)
-                    result.loc[lines,"entity_result"] = str(entity_result_list).decode('unicode_escape')
+                    result.loc[lines,"entity_result"] = str(entity_result_list)
                     result.loc[lines,"entity"] = str(entity)
 
                     if data_dict[typeof] <0.56:
