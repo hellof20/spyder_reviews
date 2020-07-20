@@ -57,8 +57,8 @@ def main():
                 result_list = []
                 for i in range(len(reviews)):
                     values = reviews[i]
-                    result_list.append([ self.appname, self.country, self.platform, values['date'], values['name'], values['title'], values['body'], values['rating'] ])
-                name = ['appname','country','platform','date', 'name', 'title', 'content', 'rating']
+                    result_list.append([ values['userReviewId'],self.appname, self.country, self.platform, values['date'], values['name'], values['title'], values['body'], values['rating'] ])
+                name = ['id','appname','country','platform','date', 'name', 'title', 'content', 'rating']
                 reviews_df = pd.DataFrame(columns=name, data=result_list)
                 return reviews_df
 
@@ -68,14 +68,17 @@ def main():
                     country=self.country,
                     sort=Sort.MOST_RELEVANT)
                 reviews_result_list = []
-                reviews_name = ['appname','country','platform','date', 'name', 'title', 'content', 'rating']
+                reviews_name = ['id','appname','country','platform','date', 'name', 'title', 'content', 'rating']
                 for i in range(len(reviews_result)):
                     values = reviews_result[i]
-                    reviews_result_list.append([ self.appname, self.country, self.platform, values['at'], values['userName'], '', values['content'], values['score'] ])
+                    reviews_result_list.append([ values['reviewId'],self.appname, self.country, self.platform, values['at'], values['userName'], '', values['content'], values['score'] ])
                 reviews_df = pd.DataFrame(columns=reviews_name, data=reviews_result_list)
                 return reviews_df
 
-
+    rdshost = 'spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com'
+    rdsuser = 'admin'
+    rdspassword = 'Pjy#0618'
+    database = 'spyder'
     Arknights_AppStore_us = App('Arknights','AppStore','us','1464872022')
     Arknights_AppStore_jp = App('Arknights','AppStore','jp','1478990007')
     AzurLane_AppStore_us = App('AzurLane','AppStore','us','1411126549')
@@ -85,23 +88,15 @@ def main():
     AzurLane_GooglePlay_jp = App('AzurLane','GooglePlay','jp','com.YoStarJP.AzurLane')
     AzurLane_GooglePlay_us = App('AzurLane','GooglePlay','us','com.YoStarEN.AzurLane')
 
-    # print(Arknights_AppStore_jp.appinfo(),'customer_ratings')
-    # print(AzurLane_GooglePlay_jp.appinfo(),'customer_ratings')
-    # print(Arknights_AppStore_us.reviews(),'customer_reviews')
-    # print(Arknights_AppStore_jp.reviews(),'customer_reviews')
-    # print(Arknights_GooglePlay_us.reviews(),'customer_reviews')
-    # print(Arknights_GooglePlay_jp.reviews(),'customer_reviews')
-    # print(AzurLane_AppStore_us.reviews(),'customer_reviews')
-    # print(AzurLane_AppStore_jp.reviews(),'customer_reviews')
-    # print(AzurLane_GooglePlay_us.reviews(),'customer_reviews')
-    # print(AzurLane_GooglePlay_jp.reviews(),'customer_reviews')
     def truncate_reviews():
-        conn = pymysql.connect(host="spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com",user="admin",password="Pjy#0618",database="spyder",charset="utf8")
+        conn = pymysql.connect(host=rdshost,user=rdsuser,password=rdspassword,database=database,charset="utf8")
         cursor = conn.cursor()
         cursor.execute('truncate table customer_reviews')
+        conn.commit()
 
     def write_mysql(dataframe,tablename):
-        connect = create_engine('mysql+pymysql://admin:Pjy#0618@spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com:3306/spyder?charset=utf8')
+        last_review_date = get_last_review_date()
+        connect = create_engine('mysql+pymysql://'+ rdsuser +':'+ rdspassword +'@' + rdshost +':3306/'+ database +'?charset=utf8')
         dataframe.to_sql(tablename, connect, if_exists='append', index=False)
 
     truncate_reviews()
