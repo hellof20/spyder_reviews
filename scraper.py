@@ -141,6 +141,14 @@ def main():
             title = df.iloc[lines,6]
             content = df.iloc[lines,7]
             rating = df.iloc[lines,8]
+            print(id)
+            print(appname)
+            print(country)
+            print(platform)
+            print(date)
+            print(name)
+            print(title)
+            print(content)
             if len(content)==0:
                 pass
             else:
