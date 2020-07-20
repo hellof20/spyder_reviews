@@ -198,7 +198,7 @@ def main():
         except Exception as e:
             pass
         continue
-    print(result['date'])
+    print(typeof(result['date']))
     result['date'] = result['date'].dt.strftime('%Y-%m-%d %H:%M:%S')
     result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
     print("completed")
