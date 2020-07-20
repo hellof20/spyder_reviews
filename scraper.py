@@ -101,27 +101,27 @@ def main():
     def write_mysql(dataframe,tablename):
         dataframe.to_sql(tablename, connect, if_exists='append', index=False)
 
-    truncate_reviews()
+    # truncate_reviews()
 
-    write_mysql(Arknights_AppStore_us.appinfo(),'customer_ratings')
-    write_mysql(Arknights_AppStore_jp.appinfo(),'customer_ratings')
-    write_mysql(Arknights_GooglePlay_jp.appinfo(),'customer_ratings')
-    write_mysql(Arknights_GooglePlay_us.appinfo(),'customer_ratings')
+    # write_mysql(Arknights_AppStore_us.appinfo(),'customer_ratings')
+    # write_mysql(Arknights_AppStore_jp.appinfo(),'customer_ratings')
+    # write_mysql(Arknights_GooglePlay_jp.appinfo(),'customer_ratings')
+    # write_mysql(Arknights_GooglePlay_us.appinfo(),'customer_ratings')
     
-    write_mysql(AzurLane_AppStore_us.appinfo(),'customer_ratings')
-    write_mysql(AzurLane_AppStore_jp.appinfo(),'customer_ratings')
-    write_mysql(AzurLane_GooglePlay_jp.appinfo(),'customer_ratings')
-    write_mysql(AzurLane_GooglePlay_us.appinfo(),'customer_ratings')
+    # write_mysql(AzurLane_AppStore_us.appinfo(),'customer_ratings')
+    # write_mysql(AzurLane_AppStore_jp.appinfo(),'customer_ratings')
+    # write_mysql(AzurLane_GooglePlay_jp.appinfo(),'customer_ratings')
+    # write_mysql(AzurLane_GooglePlay_us.appinfo(),'customer_ratings')
 
-    write_mysql(Arknights_AppStore_us.reviews(),'customer_reviews')
-    write_mysql(Arknights_AppStore_jp.reviews(),'customer_reviews')
-    write_mysql(Arknights_GooglePlay_us.reviews(),'customer_reviews')
-    write_mysql(Arknights_GooglePlay_jp.reviews(),'customer_reviews')
+    # write_mysql(Arknights_AppStore_us.reviews(),'customer_reviews')
+    # write_mysql(Arknights_AppStore_jp.reviews(),'customer_reviews')
+    # write_mysql(Arknights_GooglePlay_us.reviews(),'customer_reviews')
+    # write_mysql(Arknights_GooglePlay_jp.reviews(),'customer_reviews')
 
-    write_mysql(AzurLane_AppStore_us.reviews(),'customer_reviews')
-    write_mysql(AzurLane_AppStore_jp.reviews(),'customer_reviews')
-    write_mysql(AzurLane_GooglePlay_us.reviews(),'customer_reviews')
-    write_mysql(AzurLane_GooglePlay_jp.reviews(),'customer_reviews')
+    # write_mysql(AzurLane_AppStore_us.reviews(),'customer_reviews')
+    # write_mysql(AzurLane_AppStore_jp.reviews(),'customer_reviews')
+    # write_mysql(AzurLane_GooglePlay_us.reviews(),'customer_reviews')
+    # write_mysql(AzurLane_GooglePlay_jp.reviews(),'customer_reviews')
 
     ##调用comprehend对评论数据进行处理
     comprehend = boto3.client('comprehend', region_name='us-east-1')
@@ -188,8 +188,7 @@ def main():
         except Exception as e:
             pass
         continue
-    result.to_sql('customer_reviews_result', engine, index=False, if_exists='append')
+    result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
     print("completed")
-
 if __name__ == '__main__':
     main()
