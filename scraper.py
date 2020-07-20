@@ -165,6 +165,7 @@ def main():
                     result.loc[lines,"title"] = title
                     result.loc[lines,"content"] = content
                     result.loc[lines,"rating"] = rating
+                    print(content)
                     phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
                     splited=str(phrases['KeyPhrases']).decode('unicode_escape')
                     keylist=phrases['KeyPhrases']
