@@ -188,10 +188,8 @@ def main():
         except Exception as e:
             pass
         continue
-print("completed")
-result.to_sql('customer_reviews_result', engine, index=False, if_exists='append')
-print("inserted")
-
+    result.to_sql('customer_reviews_result', engine, index=False, if_exists='append')
+    print("completed")
 
 if __name__ == '__main__':
     main()
