@@ -169,10 +169,12 @@ def main():
                     print(phrases)
                     splited=str(phrases['KeyPhrases']).decode('unicode_escape')
                     keylist=phrases['KeyPhrases']
+                    print(keylist)
                     keyword_result_list=[]
                     entity_result_list=[]
                     for key in keylist:
                         the_key_word=key['Text']
+                        print(the_key_word)
                         keyword_result_list.append(the_key_word)
                     result.loc[lines,"keyword_result"] = str(keyword_result_list).decode('unicode_escape')
                     keyword=splited
