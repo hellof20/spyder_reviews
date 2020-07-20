@@ -141,7 +141,7 @@ def main():
             title = df.iloc[lines,6]
             content = df.iloc[lines,7]
             rating = df.iloc[lines,8]
-            if len(txt)==0:
+            if len(content)==0:
                 pass
             else:
                 language_code = comprehend.detect_dominant_language(Text=content)
