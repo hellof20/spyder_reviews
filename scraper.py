@@ -141,14 +141,6 @@ def main():
             title = df.iloc[lines,6]
             content = df.iloc[lines,7]
             rating = df.iloc[lines,8]
-            print(id)
-            print(appname)
-            print(country)
-            print(platform)
-            print(date)
-            print(name)
-            print(title)
-            print(content)
             if len(content)==0:
                 pass
             else:
@@ -168,7 +160,7 @@ def main():
                     result.loc[lines,"appname"] = appname
                     result.loc[lines,"country"] = country
                     result.loc[lines,"platform"] = platform
-                    result.loc[lines,"date"] = str(date)
+                    result.loc[lines,"date"] = date
                     result.loc[lines,"name"] = name
                     result.loc[lines,"title"] = title
                     result.loc[lines,"content"] = content
@@ -207,6 +199,7 @@ def main():
             pass
         continue
     print(result)
+    result['date'] = result['date'].dt.strftime('%Y-%m-%d %H:%M:%S')
     result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
     print("completed")
 if __name__ == '__main__':
