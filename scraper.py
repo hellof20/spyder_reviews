@@ -95,7 +95,6 @@ def main():
         conn.commit()
 
     def write_mysql(dataframe,tablename):
-        last_review_date = get_last_review_date()
         connect = create_engine('mysql+pymysql://'+ rdsuser +':'+ rdspassword +'@' + rdshost +':3306/'+ database +'?charset=utf8')
         dataframe.to_sql(tablename, connect, if_exists='append', index=False)
 
