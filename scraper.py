@@ -132,17 +132,22 @@ def main():
     result = pd.DataFrame(columns=['id','appname','country','platform','date','name','title','content','rating','typeof','senti_result','keyword','entity','entity_result','keyword_result','positive','negative'])
     for lines in range(0,num):
         try:
-            txt = df.iloc[lines,0]
+            id = df.iloc[lines,0]
             appname=df.iloc[lines,1]
             country =df.iloc[lines,2]
             platform=df.iloc[lines,3]
+            date = df.iloc[lines,4]
+            name = df.iloc[lines,5]
+            title = df.iloc[lines,6]
+            content = df.iloc[lines,7]
+            rating = df.iloc[lines,8]
             if len(txt)==0:
                 pass
             else:
-                language_code = comprehend.detect_dominant_language(Text=txt)
+                language_code = comprehend.detect_dominant_language(Text=content)
                 code = language_code['Languages'][0]['LanguageCode']
                 if code in ['hi', 'de', 'zh-TW', 'ko', 'pt', 'en', 'it', 'fr', 'zh', 'es', 'ar','ja']:
-                    sentiments = comprehend.detect_sentiment(Text=txt, LanguageCode=code)
+                    sentiments = comprehend.detect_sentiment(Text=content, LanguageCode=code)
                     neutral = sentiments ['SentimentScore']["Neutral"]
                     positive = sentiments["SentimentScore"]["Positive"]
                     negative = sentiments["SentimentScore"]["Negative"]
@@ -151,11 +156,16 @@ def main():
                     result.loc[lines,"senti_result"] = str(sentiments)
                     result.loc[lines,"positive"] = str(positive)
                     result.loc[lines,"negative"] = str(negative)
-                    result.loc[lines,"content"] =txt
-                    result.loc[lines,"appname"] =appname
-                    result.loc[lines,"country"] =country
-                    result.loc[lines,"platform"] =platform
-                    phrases = comprehend.detect_key_phrases(Text=txt, LanguageCode=code)
+                    result.loc[lines,"id"] = id
+                    result.loc[lines,"appname"] = appname
+                    result.loc[lines,"country"] = country
+                    result.loc[lines,"platform"] = platform
+                    result.loc[lines,"date"] = date
+                    result.loc[lines,"name"] = name
+                    result.loc[lines,"title"] = title
+                    result.loc[lines,"content"] = content
+                    result.loc[lines,"rating"] = rating
+                    phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
                     splited=str(phrases['KeyPhrases']).decode('unicode_escape')
                     keylist=phrases['KeyPhrases']
                     keyword_result_list=[]
@@ -166,7 +176,7 @@ def main():
                     result.loc[lines,"keyword_result"] = str(keyword_result_list).decode('unicode_escape')
                     keyword=splited
                     result.loc[lines,"keyword"] = str(keyword)
-                    entities = comprehend.detect_entities(Text=txt, LanguageCode=code)
+                    entities = comprehend.detect_entities(Text=content, LanguageCode=code)
                     entity="entity:"+ str(entities['Entities']).decode('unicode_escape')   
                     entitylist=entities['Entities']
                     for entity in entitylist:
