@@ -189,7 +189,7 @@ def main():
             pass
         continue
 print("completed")
-result.to_sql('comprehend_result', engine, index=False, if_exists='append')
+result.to_sql('customer_reviews_result', engine, index=False, if_exists='append')
 print("inserted")
 
 
