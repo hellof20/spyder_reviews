@@ -9,6 +9,8 @@ from sqlalchemy import create_engine
 from warnings import filterwarnings
 from google_play_scraper import Sort, reviews, app, reviews_all
 filterwarnings("ignore",category=pymysql.Warning)
+import boto3
+
 
 def main():
     class App(object):
@@ -94,8 +96,9 @@ def main():
         cursor.execute('truncate table customer_reviews')
         conn.commit()
 
+    connect = create_engine('mysql+pymysql://'+ rdsuser +':'+ rdspassword +'@' + rdshost +':3306/'+ database +'?charset=utf8')
+
     def write_mysql(dataframe,tablename):
-        connect = create_engine('mysql+pymysql://'+ rdsuser +':'+ rdspassword +'@' + rdshost +':3306/'+ database +'?charset=utf8')
         dataframe.to_sql(tablename, connect, if_exists='append', index=False)
 
     truncate_reviews()
@@ -119,6 +122,76 @@ def main():
     write_mysql(AzurLane_AppStore_jp.reviews(),'customer_reviews')
     write_mysql(AzurLane_GooglePlay_us.reviews(),'customer_reviews')
     write_mysql(AzurLane_GooglePlay_jp.reviews(),'customer_reviews')
+
+    ##调用comprehend对评论数据进行处理
+    comprehend = boto3.client('comprehend', region_name='us-east-1')
+    sql_cmd = "select id,appname,country,platform,date,name,title,content,rating from customer_reviews where id not in (select id from customer_reviews_result) limit 10;"
+    df = pd.read_sql(sql=sql_cmd, con=connect)
+    num = df.shape[0]
+    print(num)
+    result = pd.DataFrame(columns=['id','appname','country','platform','date','name','title','content','rating','typeof','senti_result','keyword','entity','entity_result','keyword_result','positive','negative'])
+    for lines in range(0,num):
+        try:
+            txt = df.iloc[lines,0]
+            appname=df.iloc[lines,1]
+            country =df.iloc[lines,2]
+            platform=df.iloc[lines,3]
+            if len(txt)==0:
+                pass
+            else:
+                language_code=comprehend.detect_dominant_language(Text=txt)
+                code=language_code['Languages'][0]['LanguageCode']
+                if code in ['hi', 'de', 'zh-TW', 'ko', 'pt', 'en', 'it', 'fr', 'zh', 'es', 'ar','ja']:
+                    sentiments = comprehend.detect_sentiment(Text=txt, LanguageCode=code)
+                    neutral = sentiments ['SentimentScore']["Neutral"]
+                    positive=sentiments["SentimentScore"]["Positive"]
+                    negative=sentiments["SentimentScore"]["Negative"]
+                    data_dict = {'Neutral': neutral, 'Positive': positive, 'Negative': negative}
+                    typeof=max(data_dict, key=data_dict.get)
+                    result.loc[lines,"senti_result"] = str(sentiments)
+                    result.loc[lines,"positive"] = str(positive)
+                    result.loc[lines,"negative"] = str(negative)
+                    result.loc[lines,"content"] =txt
+                    result.loc[lines,"appname"] =appname
+                    result.loc[lines,"country"] =country
+                    result.loc[lines,"platform"] =platform
+                    phrases = comprehend.detect_key_phrases(Text=txt, LanguageCode=code)
+                    splited=str(phrases['KeyPhrases']).decode('unicode_escape')
+                    keylist=phrases['KeyPhrases']
+                    keyword_result_list=[]
+                    entity_result_list=[]
+                    for key in keylist:
+                        the_key_word=key['Text']
+                        keyword_result_list.append(the_key_word)
+                    result.loc[lines,"keyword_result"] = str(keyword_result_list).decode('unicode_escape')
+                    keyword=splited
+                    result.loc[lines,"keyword"] = str(keyword)
+                    entities = comprehend.detect_entities(Text=txt, LanguageCode=code)
+                    entity="entity:"+ str(entities['Entities']).decode('unicode_escape')   
+                    entitylist=entities['Entities']
+                    for entity in entitylist:
+                        the_entity_word=key['Text']
+                        entity_result_list.append(the_entity_word)
+                    result.loc[lines,"entity_result"] = str(entity_result_list).decode('unicode_escape')
+                    result.loc[lines,"entity"] = str(entity)
+
+                    if data_dict[typeof] <0.56:
+                        typeof_str='slightly'+typeof+" "+str(data_dict[typeof])
+                        result.loc[lines,"typeof"] = typeof_str
+
+                    if data_dict[typeof] >0.71:
+                        typeof_str='strong'+typeof+" "+str(data_dict[typeof])
+                        result.loc[lines,"typeof"] = typeof_str
+                    else:
+                        typeof_str="middle"+typeof+" "+str(data_dict[typeof])
+                        result.loc[lines,"typeof"] = typeof_str
+    except Exception as e:
+        pass
+    continue
+print("completed")
+result.to_sql('comprehend_result', engine, index=False, if_exists='append')
+print("inserted")
+
 
 if __name__ == '__main__':
     main()
