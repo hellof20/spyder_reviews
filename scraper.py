@@ -139,15 +139,15 @@ def main():
             if len(txt)==0:
                 pass
             else:
-                language_code=comprehend.detect_dominant_language(Text=txt)
-                code=language_code['Languages'][0]['LanguageCode']
+                language_code = comprehend.detect_dominant_language(Text=txt)
+                code = language_code['Languages'][0]['LanguageCode']
                 if code in ['hi', 'de', 'zh-TW', 'ko', 'pt', 'en', 'it', 'fr', 'zh', 'es', 'ar','ja']:
                     sentiments = comprehend.detect_sentiment(Text=txt, LanguageCode=code)
                     neutral = sentiments ['SentimentScore']["Neutral"]
-                    positive=sentiments["SentimentScore"]["Positive"]
-                    negative=sentiments["SentimentScore"]["Negative"]
+                    positive = sentiments["SentimentScore"]["Positive"]
+                    negative = sentiments["SentimentScore"]["Negative"]
                     data_dict = {'Neutral': neutral, 'Positive': positive, 'Negative': negative}
-                    typeof=max(data_dict, key=data_dict.get)
+                    typeof = max(data_dict, key=data_dict.get)
                     result.loc[lines,"senti_result"] = str(sentiments)
                     result.loc[lines,"positive"] = str(positive)
                     result.loc[lines,"negative"] = str(negative)
@@ -185,9 +185,9 @@ def main():
                     else:
                         typeof_str="middle"+typeof+" "+str(data_dict[typeof])
                         result.loc[lines,"typeof"] = typeof_str
-    except Exception as e:
-        pass
-    continue
+        except Exception as e:
+            pass
+        continue
 print("completed")
 result.to_sql('comprehend_result', engine, index=False, if_exists='append')
 print("inserted")
