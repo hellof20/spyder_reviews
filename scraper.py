@@ -172,11 +172,9 @@ def main():
                     entity_result_list=[]
                     for key in keylist:
                         the_key_word=key['Text']
-                        print(the_key_word)
                         keyword_result_list.append(the_key_word)
                     result.loc[lines,"keyword_result"] = str(keyword_result_list)
                     keyword=splited
-                    print(keyword)
                     result.loc[lines,"keyword"] = str(keyword)
                     entities = comprehend.detect_entities(Text=content, LanguageCode=code)
                     entity="entity:"+ str(entities['Entities'])
@@ -201,7 +199,7 @@ def main():
             pass
         continue
     print(result)
-    # result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
+    result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
     print("completed")
 if __name__ == '__main__':
     main()
