@@ -129,8 +129,11 @@ def main():
     df = pd.read_sql(sql=sql_cmd, con=connect)
     num = df.shape[0]
     print(num)
+    start = 0
     result = pd.DataFrame(columns=['id','appname','country','platform','date','name','title','content','rating','typeof','senti_result','keyword','entity','entity_result','keyword_result','positive','negative'])
     for lines in range(0,num):
+        start += 1
+        print(start)
         try:
             id = df.iloc[lines,0]
             appname=df.iloc[lines,1]

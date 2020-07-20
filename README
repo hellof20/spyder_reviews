@@ -1,0 +1,2 @@
+0 16 */1 * * source /home/ec2-user/spyderenv/bin/activate;python /home/ec2-user/spyder_reviews/scraper.py
+
