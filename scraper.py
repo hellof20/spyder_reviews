@@ -160,7 +160,7 @@ def main():
                     result.loc[lines,"appname"] = appname
                     result.loc[lines,"country"] = country
                     result.loc[lines,"platform"] = platform
-                    result.loc[lines,"date"] = date
+                    result.loc[lines,"date"] = str(date)
                     result.loc[lines,"name"] = name
                     result.loc[lines,"title"] = title
                     result.loc[lines,"content"] = content
