@@ -101,107 +101,59 @@ def main():
     def write_mysql(dataframe,tablename):
         dataframe.to_sql(tablename, connect, if_exists='append', index=False)
 
-    # truncate_reviews()
+    truncate_reviews()
 
-    # write_mysql(Arknights_AppStore_us.appinfo(),'customer_ratings')
-    # write_mysql(Arknights_AppStore_jp.appinfo(),'customer_ratings')
-    # write_mysql(Arknights_GooglePlay_jp.appinfo(),'customer_ratings')
-    # write_mysql(Arknights_GooglePlay_us.appinfo(),'customer_ratings')
+    write_mysql(Arknights_AppStore_us.appinfo(),'customer_ratings')
+    write_mysql(Arknights_AppStore_jp.appinfo(),'customer_ratings')
+    write_mysql(Arknights_GooglePlay_jp.appinfo(),'customer_ratings')
+    write_mysql(Arknights_GooglePlay_us.appinfo(),'customer_ratings')
     
-    # write_mysql(AzurLane_AppStore_us.appinfo(),'customer_ratings')
-    # write_mysql(AzurLane_AppStore_jp.appinfo(),'customer_ratings')
-    # write_mysql(AzurLane_GooglePlay_jp.appinfo(),'customer_ratings')
-    # write_mysql(AzurLane_GooglePlay_us.appinfo(),'customer_ratings')
+    write_mysql(AzurLane_AppStore_us.appinfo(),'customer_ratings')
+    write_mysql(AzurLane_AppStore_jp.appinfo(),'customer_ratings')
+    write_mysql(AzurLane_GooglePlay_jp.appinfo(),'customer_ratings')
+    write_mysql(AzurLane_GooglePlay_us.appinfo(),'customer_ratings')
 
-    # write_mysql(Arknights_AppStore_us.reviews(),'customer_reviews')
-    # write_mysql(Arknights_AppStore_jp.reviews(),'customer_reviews')
-    # write_mysql(Arknights_GooglePlay_us.reviews(),'customer_reviews')
-    # write_mysql(Arknights_GooglePlay_jp.reviews(),'customer_reviews')
+    write_mysql(Arknights_AppStore_us.reviews(),'customer_reviews')
+    write_mysql(Arknights_AppStore_jp.reviews(),'customer_reviews')
+    write_mysql(Arknights_GooglePlay_us.reviews(),'customer_reviews')
+    write_mysql(Arknights_GooglePlay_jp.reviews(),'customer_reviews')
 
-    # write_mysql(AzurLane_AppStore_us.reviews(),'customer_reviews')
-    # write_mysql(AzurLane_AppStore_jp.reviews(),'customer_reviews')
-    # write_mysql(AzurLane_GooglePlay_us.reviews(),'customer_reviews')
-    # write_mysql(AzurLane_GooglePlay_jp.reviews(),'customer_reviews')
+    write_mysql(AzurLane_AppStore_us.reviews(),'customer_reviews')
+    write_mysql(AzurLane_AppStore_jp.reviews(),'customer_reviews')
+    write_mysql(AzurLane_GooglePlay_us.reviews(),'customer_reviews')
+    write_mysql(AzurLane_GooglePlay_jp.reviews(),'customer_reviews')
 
     ##调用comprehend对评论数据进行处理
     comprehend = boto3.client('comprehend', region_name='us-east-1')
     sql_cmd = "select id,appname,country,platform,date,name,title,content,rating from customer_reviews where id not in (select id from customer_reviews_result);"
     df = pd.read_sql(sql=sql_cmd, con=connect)
     num = df.shape[0]
-    print(num)
-    start = 0
-    result = pd.DataFrame(columns=['id','appname','country','platform','date','name','title','content','rating','typeof','senti_result','keyword','entity','entity_result','keyword_result','positive','negative'])
-    for lines in range(0,num):
-        start += 1
-        print(start)
-        try:
-            id = df.iloc[lines,0]
-            appname=df.iloc[lines,1]
-            country =df.iloc[lines,2]
-            platform=df.iloc[lines,3]
-            date = str(df.iloc[lines,4])
-            name = df.iloc[lines,5]
-            title = df.iloc[lines,6]
-            content = df.iloc[lines,7]
-            rating = df.iloc[lines,8]
-            if len(content)==0:
-                pass
-            else:
-                language_code = comprehend.detect_dominant_language(Text=content)
-                code = language_code['Languages'][0]['LanguageCode']
-                if code in ['hi', 'de', 'zh-TW', 'ko', 'pt', 'en', 'it', 'fr', 'zh', 'es', 'ar','ja']:
-                    sentiments = comprehend.detect_sentiment(Text=content, LanguageCode=code)
-                    neutral = sentiments ['SentimentScore']["Neutral"]
-                    positive = sentiments["SentimentScore"]["Positive"]
-                    negative = sentiments["SentimentScore"]["Negative"]
-                    data_dict = {'Neutral': neutral, 'Positive': positive, 'Negative': negative}
-                    typeof = max(data_dict, key=data_dict.get)
-                    result.loc[lines,"senti_result"] = str(sentiments)
-                    result.loc[lines,"positive"] = str(positive)
-                    result.loc[lines,"negative"] = str(negative)
-                    result.loc[lines,"id"] = id
-                    result.loc[lines,"appname"] = appname
-                    result.loc[lines,"country"] = country
-                    result.loc[lines,"platform"] = platform
-                    result.loc[lines,"date"] = date
-                    result.loc[lines,"name"] = name
-                    result.loc[lines,"title"] = title
-                    result.loc[lines,"content"] = content
-                    result.loc[lines,"rating"] = rating
-                    phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
-                    splited=str(phrases['KeyPhrases'])
-                    keylist=phrases['KeyPhrases']
-                    keyword_result_list=[]
-                    entity_result_list=[]
-                    for key in keylist:
-                        the_key_word=key['Text']
-                        keyword_result_list.append(the_key_word)
-                    result.loc[lines,"keyword_result"] = str(keyword_result_list)
-                    keyword=splited
-                    result.loc[lines,"keyword"] = str(keyword)
-                    entities = comprehend.detect_entities(Text=content, LanguageCode=code)
-                    entity="entity:"+ str(entities['Entities'])
-                    entitylist=entities['Entities']
-                    for entity in entitylist:
-                        the_entity_word=key['Text']
-                        entity_result_list.append(the_entity_word)
-                    result.loc[lines,"entity_result"] = str(entity_result_list)
-                    result.loc[lines,"entity"] = str(entity)
+    for line_num in range(0,num):
+        content = df.iloc[line_num,7]
+        date = str(df.iloc[line_num,4])
+        rating = str(df.iloc[line_num,8])
+        if len(content) > 0:
+            language_code = comprehend.detect_dominant_language(Text=content)
+            code = language_code['Languages'][0]['LanguageCode']
+            sentiments = comprehend.detect_sentiment(Text=content, LanguageCode=code)
+            phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
+            entities = comprehend.detect_entities(Text=content, LanguageCode=code)
+            entities_list = []
+            keyword_list = []
+            for i in phrases['KeyPhrases']:
+                keyword_list.append(i['Text'])
+            for i in entities['Entities']:
+                entities_list.append(i['Text'])
+            df.loc[line_num,"keyword_result"] = str(keyword_list)
+            df.loc[line_num,"entity_result"] = str(entities_list)
+            df.loc[line_num,"senti_result"] = str(sentiments['Sentiment'])
+            df.loc[line_num,"date"] = date
+            df.loc[line_num,"rating"] = rating
+            line_dict = df.loc[line_num].to_dict()
+            line_df = pd.DataFrame.from_dict(line_dict,orient='index').T
+            line_df.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
+            print('processed %d rows' % (line_num + 1))
+    print('processed %d rows, completed' % num)
 
-                    if data_dict[typeof] <0.56:
-                        typeof_str='slightly'+typeof+" "+str(data_dict[typeof])
-                        result.loc[lines,"typeof"] = typeof_str
-
-                    if data_dict[typeof] >0.71:
-                        typeof_str='strong'+typeof+" "+str(data_dict[typeof])
-                        result.loc[lines,"typeof"] = typeof_str
-                    else:
-                        typeof_str="middle"+typeof+" "+str(data_dict[typeof])
-                        result.loc[lines,"typeof"] = typeof_str
-        except Exception as e:
-            pass
-        continue
-    result.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
-    print("completed")
 if __name__ == '__main__':
     main()
