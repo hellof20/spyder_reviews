@@ -103,6 +103,7 @@ def main():
 
     truncate_reviews()
 
+    
     write_mysql(Arknights_AppStore_us.appinfo(),'customer_ratings')
     write_mysql(Arknights_AppStore_jp.appinfo(),'customer_ratings')
     write_mysql(Arknights_GooglePlay_jp.appinfo(),'customer_ratings')
@@ -112,7 +113,7 @@ def main():
     write_mysql(AzurLane_AppStore_jp.appinfo(),'customer_ratings')
     write_mysql(AzurLane_GooglePlay_jp.appinfo(),'customer_ratings')
     write_mysql(AzurLane_GooglePlay_us.appinfo(),'customer_ratings')
-
+    print('scraperd appinfo')
     write_mysql(Arknights_AppStore_us.reviews(),'customer_reviews')
     write_mysql(Arknights_AppStore_jp.reviews(),'customer_reviews')
     write_mysql(Arknights_GooglePlay_us.reviews(),'customer_reviews')
@@ -122,7 +123,7 @@ def main():
     write_mysql(AzurLane_AppStore_jp.reviews(),'customer_reviews')
     write_mysql(AzurLane_GooglePlay_us.reviews(),'customer_reviews')
     write_mysql(AzurLane_GooglePlay_jp.reviews(),'customer_reviews')
-
+    print('scraperd reviews')
     ##调用comprehend对评论数据进行处理
     comprehend = boto3.client('comprehend', region_name='us-east-1')
     sql_cmd = "select id,appname,country,platform,date,name,title,content,rating from customer_reviews where id not in (select id from customer_reviews_result);"
@@ -135,24 +136,25 @@ def main():
         if len(content) > 0:
             language_code = comprehend.detect_dominant_language(Text=content)
             code = language_code['Languages'][0]['LanguageCode']
-            sentiments = comprehend.detect_sentiment(Text=content, LanguageCode=code)
-            phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
-            entities = comprehend.detect_entities(Text=content, LanguageCode=code)
-            entities_list = []
-            keyword_list = []
-            for i in phrases['KeyPhrases']:
-                keyword_list.append(i['Text'])
-            for i in entities['Entities']:
-                entities_list.append(i['Text'])
-            df.loc[line_num,"keyword_result"] = str(keyword_list)
-            df.loc[line_num,"entity_result"] = str(entities_list)
-            df.loc[line_num,"senti_result"] = str(sentiments['Sentiment'])
-            df.loc[line_num,"date"] = date
-            df.loc[line_num,"rating"] = rating
-            line_dict = df.loc[line_num].to_dict()
-            line_df = pd.DataFrame.from_dict(line_dict,orient='index').T
-            line_df.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
-            print('processed %d rows' % (line_num + 1))
+            if code in ['hi', 'de', 'zh-TW', 'ko', 'pt', 'en', 'it', 'fr', 'zh', 'es', 'ar','ja']:
+                sentiments = comprehend.detect_sentiment(Text=content, LanguageCode=code)
+                phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
+                entities = comprehend.detect_entities(Text=content, LanguageCode=code)
+                entities_list = []
+                keyword_list = []
+                for i in phrases['KeyPhrases']:
+                    keyword_list.append(i['Text'])
+                for i in entities['Entities']:
+                    entities_list.append(i['Text'])
+                df.loc[line_num,"keyword_result"] = str(keyword_list)
+                df.loc[line_num,"entity_result"] = str(entities_list)
+                df.loc[line_num,"senti_result"] = str(sentiments['Sentiment'])
+                df.loc[line_num,"date"] = date
+                df.loc[line_num,"rating"] = rating
+                line_dict = df.loc[line_num].to_dict()
+                line_df = pd.DataFrame.from_dict(line_dict,orient='index').T
+                line_df.to_sql('customer_reviews_result', connect, index=False, if_exists='append')
+                print('processed %d rows' % (line_num + 1))
     print('processed %d rows, completed' % num)
 
 if __name__ == '__main__':
