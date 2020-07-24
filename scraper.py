@@ -105,7 +105,7 @@ def main():
             dataframe.to_sql(tablename, connect, if_exists='append', index=False)
 
     def do_comprehend(df, line_num, comprehend):
-        content = df.iloc[line_num, 7]
+        content = df.iloc[line_num, 7][:1000]
         date = str(df.iloc[line_num, 4])
         rating = str(df.iloc[line_num, 8])
         if len(content) > 0:
