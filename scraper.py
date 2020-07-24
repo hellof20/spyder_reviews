@@ -158,9 +158,11 @@ def main():
         df = pd.read_sql(sql=sql_cmd, con=connect)
         num = df.shape[0]
         print("begin process ... ")
-        with ThreadPoolExecutor(100) as executor:
-            for line_num in range(0, num):
-                executor.submit(do_comprehend, df, line_num, comprehend)
+        # with ThreadPoolExecutor(100) as executor:
+        #     for line_num in range(0, num):
+        #         executor.submit(do_comprehend, df, line_num, comprehend)
+        for line_num in range(0, num):
+            do_comprehend(df, line_num, comprehend)                
         print('num of %d reviews processed' % num)
 
 
