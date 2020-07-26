@@ -149,7 +149,7 @@ def main():
             except BaseException as e:
                 s = sys.exc_info()
                 print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
-                logger_error(["不支持的语言：id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
+                logger_error(["不支持的语言 id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
         else:
             logger_error(['评论内容长度为0 id：' + str(df.iloc[line_num, 0])])
 
