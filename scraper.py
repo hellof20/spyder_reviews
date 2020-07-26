@@ -103,15 +103,29 @@ def main():
             dataframe.to_sql(tablename, connect, if_exists='replace', index=False)
         else:
             dataframe.to_sql(tablename, connect, if_exists='append', index=False)
+    
+    # logs为 list
+    def logger_error(logs):
+        write_logs = [time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())]
+        write_logs.extend(logs)
+        f = open(error_log, 'a')
+        f.write("\t".join(write_logs) + '\n')
+        f.close()
 
-    def do_comprehend(df, line_num, comprehend):
-        content = df.iloc[line_num, 7][:1000]
+    def do_comprehend(df, line_num):
+        comprehend = boto3.client('comprehend', region_name='us-east-1')
+        content = df.iloc[line_num, 7]
         date = str(df.iloc[line_num, 4])
         rating = str(df.iloc[line_num, 8])
+        bytes_content = content.encode("utf-8")
+        len_utf8 = len(bytes_content)
+        if len_utf8 > 5000:
+            bytes_0_5000 = bytes_content[0:5000]
+            content = bytes_0_5000.decode('utf-8', errors='ignore')
         if len(content) > 0:
             language_code = comprehend.detect_dominant_language(Text=content)
             code = language_code['Languages'][0]['LanguageCode']
-            if code in ['hi', 'de', 'zh-TW', 'ko', 'pt', 'en', 'it', 'fr', 'zh', 'es', 'ar','ja']:
+            try:
                 sentiments = comprehend.detect_sentiment(Text=content, LanguageCode=code)
                 phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
                 entities = comprehend.detect_entities(Text=content, LanguageCode=code)
@@ -121,15 +135,20 @@ def main():
                     keyword_list.append(i['Text'])
                 for i in entities['Entities']:
                     entities_list.append(i['Text'])
-                df.loc[line_num, "keyword"] = str(keyword_list)
-                df.loc[line_num, "entity"] = str(entities_list)
-                df.loc[line_num, "sentiment"] = str(sentiments['Sentiment'])
+                df.loc[line_num, "keyword_result"] = str(keyword_list)
+                df.loc[line_num, "entity_result"] = str(entities_list)
+                df.loc[line_num, "senti_result"] = str(sentiments['Sentiment'])
                 df.loc[line_num, "date"] = date
                 df.loc[line_num, "rating"] = rating
                 line_dict = df.loc[line_num].to_dict()
                 line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
-                line_df.to_sql('customer_reviews',connect,index=False,if_exists='append')
+                line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
                 print('processed %d rows' % (line_num + 1))
+            except BaseException as e:
+                s = sys.exc_info()
+                print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
+                logger_error("报错错误：" + [str(e), "id："+ str(df.iloc[line_num, 0]), "LanguageCode："+ code])
+        logger_error(['%d rows content 内容长度为0' % (line_num + 1), "id："+str(df.iloc[line_num, 0])])
 
     mysql_df = pd.read_csv('mysql.csv')
     rdshost = mysql_df.iloc[0,0]
@@ -158,11 +177,11 @@ def main():
         df = pd.read_sql(sql=sql_cmd, con=connect)
         num = df.shape[0]
         print("begin process ... ")
-        # with ThreadPoolExecutor(100) as executor:
-        #     for line_num in range(0, num):
-        #         executor.submit(do_comprehend, df, line_num, comprehend)
-        for line_num in range(0, num):
-            do_comprehend(df, line_num, comprehend)                
+        with ThreadPoolExecutor(10) as executor:
+            for line_num in range(0, num):
+                executor.submit(do_comprehend, df, line_num)
+        # for line_num in range(0, num):
+        #     do_comprehend(df, line_num, comprehend)
         print('num of %d reviews processed' % num)
 
 
