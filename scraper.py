@@ -159,7 +159,7 @@ def main():
     rdspassword = mysql_df.iloc[0,2]
     database = mysql_df.iloc[0,3]
     connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
-    comprehend = boto3.client('comprehend', region_name='us-east-1')
+    comprehend = boto3.client('comprehend', region_name='ap-southeast-1')
     game_df = pd.read_csv('app.csv')
     game_num = game_df.shape[0]
     for i in range(0,game_num):
