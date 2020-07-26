@@ -3,7 +3,7 @@
 
 import urllib.request
 import pandas as pd
-import json, time
+import sys, json, time
 import pymysql
 from sqlalchemy import create_engine
 from warnings import filterwarnings
@@ -11,6 +11,8 @@ from google_play_scraper import Sort, reviews, app, reviews_all
 from concurrent.futures import ThreadPoolExecutor
 filterwarnings("ignore", category=pymysql.Warning)
 import boto3
+
+error_log = "error.log"
 
 def main():
     class App(object):
@@ -135,20 +137,21 @@ def main():
                     keyword_list.append(i['Text'])
                 for i in entities['Entities']:
                     entities_list.append(i['Text'])
-                df.loc[line_num, "keyword_result"] = str(keyword_list)
-                df.loc[line_num, "entity_result"] = str(entities_list)
-                df.loc[line_num, "senti_result"] = str(sentiments['Sentiment'])
+                df.loc[line_num, "keyword"] = str(keyword_list)
+                df.loc[line_num, "entity"] = str(entities_list)
+                df.loc[line_num, "sentiment"] = str(sentiments['Sentiment'])
                 df.loc[line_num, "date"] = date
                 df.loc[line_num, "rating"] = rating
                 line_dict = df.loc[line_num].to_dict()
                 line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
                 line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
-                print('processed %d rows' % (line_num + 1))
+                # print('processed %d rows' % (line_num + 1))
             except BaseException as e:
                 s = sys.exc_info()
                 print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
-                logger_error("报错错误：" + [str(e), "id："+ str(df.iloc[line_num, 0]), "LanguageCode："+ code])
-        logger_error(['%d rows content 内容长度为0' % (line_num + 1), "id："+str(df.iloc[line_num, 0])])
+                logger_error(["不支持的语言：id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
+        else:
+            logger_error(['评论内容长度为0 id：' + str(df.iloc[line_num, 0])])
 
     mysql_df = pd.read_csv('mysql.csv')
     rdshost = mysql_df.iloc[0,0]
