@@ -59,7 +59,9 @@ def main():
                      result['histogram'][1], result['histogram'][2], result['histogram'][3], result['histogram'][4]])
                 ratingdf = pd.DataFrame(columns=ratingname, data=rating_result_list)
                 return ratingdf
-
+            if self.platform == 'TapTap':
+                pass
+                
         def reviews(self):
             if self.platform == 'AppStore':
                 headers = {
@@ -100,6 +102,9 @@ def main():
                 reviews_df = pd.DataFrame(columns=reviews_name, data=reviews_result_list)
                 return reviews_df
 
+            if self.paltform == 'TapTap':
+                pass
+
     def write_mysql(connect, dataframe, tablename):
         if tablename == 'customer_reviews_temp':
             dataframe.to_sql(tablename, connect, if_exists='replace', index=False)
@@ -137,8 +142,8 @@ def main():
                     keyword_list.append(i['Text'])
                 for i in entities['Entities']:
                     entities_list.append(i['Text'])
-                df.loc[line_num, "keyword"] = str(keyword_list)
-                df.loc[line_num, "entity"] = str(entities_list)
+                df.loc[line_num, "keyword"] = "|".join(keyword_list)
+                df.loc[line_num, "entity"] = "|".join(entities_list)
                 df.loc[line_num, "sentiment"] = str(sentiments['Sentiment'])
                 df.loc[line_num, "date"] = date
                 df.loc[line_num, "rating"] = rating
@@ -180,11 +185,11 @@ def main():
         df = pd.read_sql(sql=sql_cmd, con=connect)
         num = df.shape[0]
         print("begin process ... ")
-        with ThreadPoolExecutor(10) as executor:
-            for line_num in range(0, num):
-                executor.submit(do_comprehend, df, line_num)
-        # for line_num in range(0, num):
-        #     do_comprehend(df, line_num, comprehend)
+        # with ThreadPoolExecutor(10) as executor:
+        #     for line_num in range(0, num):
+        #         executor.submit(do_comprehend, df, line_num)
+        for line_num in range(0, num):
+            do_comprehend(df, line_num, comprehend)
         print('num of %d reviews processed' % num)
 
 
