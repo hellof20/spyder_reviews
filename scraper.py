@@ -134,7 +134,10 @@ def main():
             verbsphrases = [token.lemma_ for token in doc if token.pos_ == "VERB"]
             adjphrases = [token.lemma_ for token in doc if token.pos_ == "ADJ"]
             keyword_list = list(set(nounphrases + verbsphrases + adjphrases))
-        df.loc[line_num, "keyword"] = "|".join(keyword_list)
+        df.loc[line_num, "noun"] = "|".join(nounphrases)
+        df.loc[line_num, "verb"] = "|".join(verbsphrases)
+        df.loc[line_num, "adj"] = "|".join(adjphrases)
+        df.loc[line_num, "keyword"] = "|".join(keyword_list)        
         df.loc[line_num, "entity"] = ""
         df.loc[line_num, "sentiment"] = ""
         df.loc[line_num, "date"] = date

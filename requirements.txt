@@ -10,10 +10,8 @@ cymem==2.0.3
 Cython==0.29.21
 dartsclone==0.9.0
 docutils==0.15.2
-en-core-web-sm==2.3.1
 google-play-scraper==0.0.3.0
 idna==2.10
-ja-core-news-sm==2.3.2
 jmespath==0.10.0
 joblib==0.16.0
 murmurhash==1.0.2
