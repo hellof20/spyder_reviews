@@ -128,6 +128,9 @@ def main():
         rating = str(df.iloc[line_num, 8])
         if content == '':
             keyword_list = []
+            nounphrases = []
+            verbsphrases = []
+            adjphrases = []
         else:
             doc = nlp(content)
             nounphrases = [chunk.text for chunk in doc.noun_chunks]
