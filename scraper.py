@@ -121,6 +121,7 @@ def main():
 
     ennlp = spacy.load("en_core_web_sm")
     jpnlp = spacy.load("ja_core_news_sm")
+    zhnlp = spacy.load("zh_core_web_sm")
 
     def do_spacy(df,line_num,nlp):
         content = df.iloc[line_num, 7]
@@ -221,6 +222,9 @@ def main():
         if game_df.iloc[i,2] == 'jp':
             for line_num in range(0, num):
                 do_spacy(df, line_num, jpnlp)
+        if game_df.iloc[i,2] == 'cn':
+            for line_num in range(0, num):
+                do_spacy(df, line_num, zhnlp)
         print('num of %d reviews processed' % num)
 
 
