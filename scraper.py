@@ -134,7 +134,8 @@ def main():
             adjphrases = []
         else:
             doc = nlp(content)
-            nounphrases = [chunk.text for chunk in doc.noun_chunks]
+            # nounphrases = [chunk.text for chunk in doc.noun_chunks]
+            nounphrases = [token.lemma_ for token in doc if token.pos_ == "NOUN"]
             verbsphrases = [token.lemma_ for token in doc if token.pos_ == "VERB"]
             adjphrases = [token.lemma_ for token in doc if token.pos_ == "ADJ"]
             keyword_list = list(set(nounphrases + verbsphrases + adjphrases))
