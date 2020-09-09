@@ -137,8 +137,8 @@ def main():
                     keyword_list.append(i['Text'])
                 for i in entities['Entities']:
                     entities_list.append(i['Text'])
-                df.loc[line_num, "keyword"] = str(keyword_list)
-                df.loc[line_num, "entity"] = str(entities_list)
+                df.loc[line_num, "keyword"] = "|".join(keyword_list)
+                df.loc[line_num, "entity"] = "|".join(entities_list)
                 df.loc[line_num, "sentiment"] = str(sentiments['Sentiment'])
                 df.loc[line_num, "date"] = date
                 df.loc[line_num, "rating"] = rating
@@ -180,7 +180,7 @@ def main():
         df = pd.read_sql(sql=sql_cmd, con=connect)
         num = df.shape[0]
         print("begin process ... ")
-        with ThreadPoolExecutor(10) as executor:
+        with ThreadPoolExecutor(3) as executor:
             for line_num in range(0, num):
                 executor.submit(do_comprehend, df, line_num)
         # for line_num in range(0, num):
