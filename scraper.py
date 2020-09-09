@@ -59,7 +59,9 @@ def main():
                      result['histogram'][1], result['histogram'][2], result['histogram'][3], result['histogram'][4]])
                 ratingdf = pd.DataFrame(columns=ratingname, data=rating_result_list)
                 return ratingdf
-
+            if self.platform == 'TapTap':
+                pass
+                
         def reviews(self):
             if self.platform == 'AppStore':
                 headers = {
@@ -99,6 +101,9 @@ def main():
                          values['userName'], '', values['content'], values['score']])
                 reviews_df = pd.DataFrame(columns=reviews_name, data=reviews_result_list)
                 return reviews_df
+
+            if self.paltform == 'TapTap':
+                pass
 
     def write_mysql(connect, dataframe, tablename):
         if tablename == 'customer_reviews_temp':
@@ -149,7 +154,7 @@ def main():
             except BaseException as e:
                 s = sys.exc_info()
                 print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
-                logger_error(["不支持的语言：id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
+                logger_error(["不支持的语言 id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
         else:
             logger_error(['评论内容长度为0 id：' + str(df.iloc[line_num, 0])])
 
@@ -180,11 +185,11 @@ def main():
         df = pd.read_sql(sql=sql_cmd, con=connect)
         num = df.shape[0]
         print("begin process ... ")
-        with ThreadPoolExecutor(3) as executor:
-            for line_num in range(0, num):
-                executor.submit(do_comprehend, df, line_num)
-        # for line_num in range(0, num):
-        #     do_comprehend(df, line_num, comprehend)
+        # with ThreadPoolExecutor(10) as executor:
+        #     for line_num in range(0, num):
+        #         executor.submit(do_comprehend, df, line_num)
+        for line_num in range(0, num):
+            do_comprehend(df, line_num, comprehend)
         print('num of %d reviews processed' % num)
 
 
