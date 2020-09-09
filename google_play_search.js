@@ -1,7 +1,7 @@
 var gplay = require('google-play-scraper');
 
-term = 'Azur Lane'
-country = 'jp'
+term='명일방주'
+country = 'kr'
 
 gplay.search({
     term: term,

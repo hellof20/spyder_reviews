@@ -1,10 +1,12 @@
 appname,platform,country,appid
 Arknights,AppStore,us,1464872022
 Arknights,AppStore,jp,1478990007
+Arknights,AppStore,kr,1473903308
 AzurLane,AppStore,us,1411126549
 AzurLane,AppStore,jp,1242186587
 Arknights,GooglePlay,jp,com.YoStarJP.Arknights
 Arknights,GooglePlay,us,com.YoStarEN.Arknights
+Arknights,GooglePlay,kr,com.YoStarKR.Arknights
 AzurLane,GooglePlay,jp,com.YoStarJP.AzurLane
 AzurLane,GooglePlay,us,com.YoStarEN.AzurLane
 江南百景图,AppStore,cn,1498402704
