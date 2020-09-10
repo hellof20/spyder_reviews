@@ -1,2 +1,1 @@
-0 16 */1 * * source /home/ec2-user/spyderenv/bin/activate;python /home/ec2-user/spyder_reviews/scraper.py
-
+59 23 */1 * * source /home/ec2-user/spyderenv/bin/activate;cd /home/ec2-user/spyder_reviews_spacy;pwd;python scraper.py
