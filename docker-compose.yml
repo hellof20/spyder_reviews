@@ -1,0 +1,10 @@
+version: '3'
+services:
+  spyder:
+    image: reviews:spacy
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: ecs
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: reviews-spacy
