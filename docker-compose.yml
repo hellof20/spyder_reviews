@@ -1,10 +1,10 @@
 version: '3'
 services:
   spyder:
-    image: 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:spacy
+    image: 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:comprehend
     logging:
       driver: awslogs
       options:
         awslogs-group: ecs
         awslogs-region: ap-southeast-1
-        awslogs-stream-prefix: reviews-spacy
+        awslogs-stream-prefix: reviews-comprehend
