@@ -5,6 +5,7 @@ import urllib.request
 import pandas as pd
 import sys, json, time
 import pymysql
+import os
 from sqlalchemy import create_engine
 from warnings import filterwarnings
 from google_play_scraper import Sort, reviews, app, reviews_all
@@ -230,6 +231,7 @@ def main():
 
 
 if __name__ == '__main__':
+    print(os.environ["username"])
     start = time.time()
     main()
     end = time.time()
