@@ -5,6 +5,7 @@ import urllib.request
 import pandas as pd
 import sys, json, time
 import pymysql
+import boto3
 import os
 from sqlalchemy import create_engine
 from warnings import filterwarnings
@@ -152,52 +153,22 @@ def main():
         line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
         line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
 
-
-    # def do_comprehend(df, line_num):
-    #     comprehend = boto3.client('comprehend', region_name='us-east-1')
-    #     content = df.iloc[line_num, 7]
-    #     date = str(df.iloc[line_num, 4])
-    #     rating = str(df.iloc[line_num, 8])
-    #     bytes_content = content.encode("utf-8")
-    #     len_utf8 = len(bytes_content)
-    #     if len_utf8 > 5000:
-    #         bytes_0_5000 = bytes_content[0:5000]
-    #         content = bytes_0_5000.decode('utf-8', errors='ignore')
-    #     if len(content) > 0:
-    #         language_code = comprehend.detect_dominant_language(Text=content)
-    #         code = language_code['Languages'][0]['LanguageCode']
-    #         try:
-    #             sentiments = comprehend.detect_sentiment(Text=content, LanguageCode=code)
-    #             phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
-    #             entities = comprehend.detect_entities(Text=content, LanguageCode=code)
-    #             entities_list = []
-    #             keyword_list = []
-    #             for i in phrases['KeyPhrases']:
-    #                 keyword_list.append(i['Text'])
-    #             for i in entities['Entities']:
-    #                 entities_list.append(i['Text'])
-    #             df.loc[line_num, "keyword"] = "|".join(keyword_list)
-    #             df.loc[line_num, "entity"] = "|".join(entities_list)
-    #             df.loc[line_num, "sentiment"] = str(sentiments['Sentiment'])
-    #             df.loc[line_num, "date"] = date
-    #             df.loc[line_num, "rating"] = rating
-    #             line_dict = df.loc[line_num].to_dict()
-    #             line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
-    #             line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
-    #             # print('processed %d rows' % (line_num + 1))
-    #         except BaseException as e:
-    #             s = sys.exc_info()
-    #             print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
-    #             logger_error(["不支持的语言 id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
-    #     else:
-    #         logger_error(['评论内容长度为0 id：' + str(df.iloc[line_num, 0])])
-
-    mysql_df = pd.read_csv('mysql.csv')
-    rdshost = mysql_df.iloc[0,0]
-    rdsuser = mysql_df.iloc[0,1]
-    rdspassword = mysql_df.iloc[0,2]
-    database = mysql_df.iloc[0,3]
+    if os.environ.get('rdshost') == None:
+        mysql_df = pd.read_csv('mysql.csv')
+        rdshost = mysql_df.iloc[0,0]
+        rdsuser = mysql_df.iloc[0,1]
+        rdspassword = mysql_df.iloc[0,2]
+        database = mysql_df.iloc[0,3]
+    else:
+        rdshost = os.environ.get('rdshost')
+        rdsuser = os.environ.get('rdsuser')
+        rdspassword = os.environ.get('rdspassword')
+        database = os.environ.get('rdsdatabase')
     connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
+    s3 = boto3.resource('s3')
+    appbucket = os.environ.get('appbucket')
+    appkey = os.environ.get('appkey')
+    s3.meta.client.download_file(appbucket, appkey, 'app.csv')
     game_df = pd.read_csv('app.csv')
     game_num = game_df.shape[0]
     for i in range(0,game_num):
@@ -231,7 +202,6 @@ def main():
 
 
 if __name__ == '__main__':
-    print(os.environ["username"])
     start = time.time()
     main()
     end = time.time()
