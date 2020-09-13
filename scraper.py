@@ -161,6 +161,8 @@ def main():
     s3 = boto3.resource('s3')
     appbucket = os.environ.get('appbucket')
     appkey = os.environ.get('appkey')
+    print(appbucket)
+    print(appkey)
     s3.meta.client.download_file(appbucket, appkey, 'app.csv')
     game_df = pd.read_csv('app.csv')
     game_num = game_df.shape[0]
