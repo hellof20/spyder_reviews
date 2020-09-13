@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 ##配置ECS CLI工具
 ecs-cli configure --config-name SingaporeECSFargate --cluster SingaporeECSFargate --region ap-southeast-1 --default-launch-type FARGATE
+=======
+59 23 */1 * * source /home/ec2-user/spyderenv/bin/activate;cd /home/ec2-user/spyder_reviews_spacy;pwd;python scraper.py
+>>>>>>> f6e95f4870ae87dafe4fc5fd21addc7bc81f0603
 
 ##创建 Amazon ECS 集群
 ecs-cli up --cluster-config SingaporeECSFargate --empty
