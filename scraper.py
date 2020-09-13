@@ -11,6 +11,7 @@ from google_play_scraper import Sort, reviews, app, reviews_all
 from concurrent.futures import ThreadPoolExecutor
 filterwarnings("ignore", category=pymysql.Warning)
 import boto3
+import os
 
 error_log = "error.log"
 
