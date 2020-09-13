@@ -3,9 +3,12 @@ services:
   spyder:
     image: 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:spacy
     environment:
-      username: admin
-      password: ppp
-      endpoint: 127.0.0.2
+      rdshost: spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com
+      rdsuser: admin
+      rdspassword: Pjy#0618
+      rdsdatabase: spyder
+      appbucket: pwm-singapore
+      appkey: app.csv
     logging:
       driver: awslogs
       options:

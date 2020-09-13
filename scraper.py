@@ -153,17 +153,10 @@ def main():
         line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
         line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
 
-    if os.environ.get('rdshost') == None:
-        mysql_df = pd.read_csv('mysql.csv')
-        rdshost = mysql_df.iloc[0,0]
-        rdsuser = mysql_df.iloc[0,1]
-        rdspassword = mysql_df.iloc[0,2]
-        database = mysql_df.iloc[0,3]
-    else:
-        rdshost = os.environ.get('rdshost')
-        rdsuser = os.environ.get('rdsuser')
-        rdspassword = os.environ.get('rdspassword')
-        database = os.environ.get('rdsdatabase')
+    rdshost = os.environ.get('rdshost')
+    rdsuser = os.environ.get('rdsuser')
+    rdspassword = os.environ.get('rdspassword')
+    database = os.environ.get('rdsdatabase')
     connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
     s3 = boto3.resource('s3')
     appbucket = os.environ.get('appbucket')
@@ -199,7 +192,6 @@ def main():
             for line_num in range(0, num):
                 do_spacy(df, line_num, zhnlp)
         print('num of %d reviews processed' % num)
-
 
 if __name__ == '__main__':
     start = time.time()
