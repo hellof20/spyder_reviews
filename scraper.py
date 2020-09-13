@@ -158,13 +158,22 @@ def main():
         else:
             logger_error(['评论内容长度为0 id：' + str(df.iloc[line_num, 0])])
 
-    mysql_df = pd.read_csv('mysql.csv')
-    rdshost = mysql_df.iloc[0,0]
-    rdsuser = mysql_df.iloc[0,1]
-    rdspassword = mysql_df.iloc[0,2]
-    database = mysql_df.iloc[0,3]
+    # mysql_df = pd.read_csv('mysql.csv')
+    # rdshost = mysql_df.iloc[0,0]
+    # rdsuser = mysql_df.iloc[0,1]
+    # rdspassword = mysql_df.iloc[0,2]
+    # database = mysql_df.iloc[0,3]
+    # game_df = pd.read_csv('app.csv')
+    rdshost = os.environ.get('rdshost')
+    rdsuser = os.environ.get('rdsuser')
+    rdspassword = os.environ.get('rdspassword')
+    database = os.environ.get('rdsdatabase')
+    s3 = boto3.resource('s3')
+    appbucket = os.environ.get('appbucket')
+    appkey = os.environ.get('appkey')
+    s3.meta.client.download_file(appbucket, appkey, 'app.csv')
     connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
-    comprehend = boto3.client('comprehend', region_name='ap-southeast-1')
+    comprehend = boto3.client('comprehend')
     game_df = pd.read_csv('app.csv')
     game_num = game_df.shape[0]
     for i in range(0,game_num):
@@ -185,13 +194,12 @@ def main():
         df = pd.read_sql(sql=sql_cmd, con=connect)
         num = df.shape[0]
         print("begin process ... ")
-        # with ThreadPoolExecutor(10) as executor:
-        #     for line_num in range(0, num):
-        #         executor.submit(do_comprehend, df, line_num)
-        for line_num in range(0, num):
-            do_comprehend(df, line_num, comprehend)
-        print('num of %d reviews processed' % num)
-
+        with ThreadPoolExecutor(3) as executor:
+            for line_num in range(0, num):
+                executor.submit(do_comprehend, df, line_num)
+        # for line_num in range(0, num):
+        #     do_comprehend(df, line_num, comprehend)
+        # print('num of %d reviews processed' % num)
 
 if __name__ == '__main__':
     start = time.time()

@@ -1,10 +1,17 @@
 version: '3'
 services:
   spyder:
-    image: 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:comprehend
+    image: 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:spacy
+    environment:
+      rdshost: spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com
+      rdsuser: admin
+      rdspassword: Pjy#0618
+      rdsdatabase: spyder
+      appbucket: pwm-singapore
+      appkey: app.csv
     logging:
       driver: awslogs
       options:
         awslogs-group: ecs
         awslogs-region: ap-southeast-1
-        awslogs-stream-prefix: reviews-comprehend
+        awslogs-stream-prefix: reviews-spacy

@@ -1,2 +1,8 @@
-0 16 */1 * * source /home/ec2-user/spyderenv/bin/activate;python /home/ec2-user/spyder_reviews/scraper.py
+##配置ECS CLI工具
+ecs-cli configure --config-name SingaporeECSFargate --cluster SingaporeECSFargate --region ap-southeast-1 --default-launch-type FARGATE
 
+##创建 Amazon ECS 集群
+ecs-cli up --cluster-config SingaporeECSFargate --empty
+
+##启动task
+ecs-cli compose up --create-log-groups
