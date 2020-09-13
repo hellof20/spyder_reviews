@@ -1,7 +1,7 @@
 version: '3'
 services:
   spyder:
-    image: 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:spacy
+    image: 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:comprehend
     environment:
       rdshost: spyder-customer-reviews.cdagscjv6mu0.ap-southeast-1.rds.amazonaws.com
       rdsuser: admin
@@ -14,4 +14,4 @@ services:
       options:
         awslogs-group: ecs
         awslogs-region: ap-southeast-1
-        awslogs-stream-prefix: reviews-spacy
+        awslogs-stream-prefix: reviews-comprehend

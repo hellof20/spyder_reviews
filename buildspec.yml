@@ -9,10 +9,10 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t reviews:spacy .
-      - docker tag reviews:spacy 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:spacy
+      - docker build -t reviews:comprehend .
+      - docker tag reviews:comprehend 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:comprehend
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - docker push 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:spacy
+      - docker push 486127124488.dkr.ecr.ap-southeast-1.amazonaws.com/reviews:comprehend
