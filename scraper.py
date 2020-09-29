@@ -158,16 +158,12 @@ def main():
     rdspassword = os.environ.get('rdspassword')
     database = os.environ.get('rdsdatabase')
     # connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
-    connect = create_engine('mysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + '?charset=utf8')
+    connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost)
     
     #创建数据库和表
-    dbs = connect.execute("show databases;")
-    print(dbs)
-
     sql = """
-CREATE DATABASE spyder DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-DROP TABLE IF EXISTS customer_ratings;
-create table customer_ratings(
+CREATE DATABASE IF NOT EXISTS """ + database + """ DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+create table IF NOT EXISTS customer_ratings(
     appname varchar(128),
     country varchar(16),
     platform varchar(16),
@@ -181,8 +177,7 @@ create table customer_ratings(
     4starts int,
     5stars int)
     ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-DROP TABLE IF EXISTS customer_reviews_temp;
-create table customer_reviews_temp(
+create table IF NOT EXISTS customer_reviews_temp(
     id VARCHAR(128),
     appname VARCHAR(128),
     country VARCHAR(16),
@@ -194,8 +189,7 @@ create table customer_reviews_temp(
     rating smallint,
     PRIMARY KEY ( id )) 
     ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-DROP TABLE IF EXISTS customer_reviews;
-create table customer_reviews(
+create table IF NOT EXISTS customer_reviews(
     id VARCHAR(128),
     appname VARCHAR(128),
     country VARCHAR(16),
@@ -216,7 +210,8 @@ create table customer_reviews(
     PRIMARY KEY ( id ))
     ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 """
-
+    connect.execute(sql)
+    
     #处理app.csv文件
     s3 = boto3.resource('s3')
     appbucket = os.environ.get('appbucket')
