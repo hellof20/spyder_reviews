@@ -158,11 +158,10 @@ def main():
     rdspassword = os.environ.get('rdspassword')
     database = os.environ.get('rdsdatabase')
     # connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
-    connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306?charset=utf8')
+    connect = create_engine('mysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + '?charset=utf8')
     
     #创建数据库和表
-    cursor = conn.cursor()
-    dbs = cursor.execute("show databases;")
+    dbs = connect.execute("show databases;")
     print(dbs)
 
     sql = """
