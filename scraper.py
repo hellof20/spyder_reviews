@@ -157,60 +157,7 @@ def main():
     rdsuser = os.environ.get('rdsuser')
     rdspassword = os.environ.get('rdspassword')
     database = os.environ.get('rdsdatabase')
-    # connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
-    connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost)
-    
-    #创建数据库和表
-    sql = """
-CREATE DATABASE IF NOT EXISTS """ + database + """ DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-create table IF NOT EXISTS customer_ratings(
-    appname varchar(128),
-    country varchar(16),
-    platform varchar(16),
-    date DATETIME,
-    totalNumberOfReviews int,
-    ratingAverage double,
-    ratingCount int,
-    1stars int,
-    2stars int,
-    3stars int,
-    4starts int,
-    5stars int)
-    ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-create table IF NOT EXISTS customer_reviews_temp(
-    id VARCHAR(128),
-    appname VARCHAR(128),
-    country VARCHAR(16),
-    platform varchar(16),
-    date DATETIME,
-    name VARCHAR(128),
-    title TEXT,
-    content TEXT,
-    rating smallint,
-    PRIMARY KEY ( id )) 
-    ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-create table IF NOT EXISTS customer_reviews(
-    id VARCHAR(128),
-    appname VARCHAR(128),
-    country VARCHAR(16),
-    platform varchar(16),
-    date DATETIME,
-    name VARCHAR(128),
-    title TEXT,
-    content TEXT,
-    rating smallint,
-    sentiment VARCHAR(500),
-    keyword VARCHAR(1000),
-    noun VARCHAR(500),
-    adj VARCHAR(500),
-    verb VARCHAR(500),
-    entity VARCHAR(500),
-    createtime DATETIME default CURRENT_TIMESTAMP,
-    updatetime DATETIME default CURRENT_TIMESTAMP,
-    PRIMARY KEY ( id ))
-    ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
-"""
-    connect.execute(sql)
+    connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
     
     #处理app.csv文件
     s3 = boto3.resource('s3')
