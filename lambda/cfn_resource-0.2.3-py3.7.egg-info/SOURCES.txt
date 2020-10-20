@@ -1,0 +1,11 @@
+LICENSE.txt
+MANIFEST.in
+README.md
+cfn_resource.py
+setup.cfg
+setup.py
+cfn_resource.egg-info/PKG-INFO
+cfn_resource.egg-info/SOURCES.txt
+cfn_resource.egg-info/dependency_links.txt
+cfn_resource.egg-info/requires.txt
+cfn_resource.egg-info/top_level.txt

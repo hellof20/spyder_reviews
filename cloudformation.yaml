@@ -73,10 +73,8 @@ Resources:
             db_username: 
               Ref: DatabaseUsername
 
-  Primerinvoke:
-    Type: AWS::CloudFormation::CustomResource
-    DependsOn: MyFunc
-    Version: "1.0"
+  Initdb:
+    Type: Custom::Initdb
     Properties:
       ServiceToken: !GetAtt MyFunc.Arn
       
@@ -121,8 +119,8 @@ Resources:
         - !Ref DatabaseSecurityGroup
       ScalingConfiguration:
         AutoPause: true
-        MinCapacity: 4
-        MaxCapacity: 32
+        MinCapacity: 2
+        MaxCapacity: 16
         SecondsUntilAutoPause: 1000
   Cluster: 
     Type: AWS::ECS::Cluster
