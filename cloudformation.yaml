@@ -14,7 +14,6 @@ Parameters:
     Default: app.csv
     Description: The description file name
   bucketname:
-    Default: pwm-virginia
     Type: String
     Description: The description file s3 location
   DatabasePassword:
@@ -133,21 +132,17 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties: 
       VpcId: !Ref VPC
-      GroupDescription: Access to database
+      GroupDescription: database SecurityGroup
       SecurityGroupIngress:
         FromPort: 3306
         ToPort: 3306
         IpProtocol: tcp
-        CidrIp: 0.0.0.0/0
-      Tags: 
-        - Key: Name
-          Value: keycloak-security-group
+        CidrIp: 0.0.0.0/0  
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     DependsOn: LogGroup
     Properties:
-      Family: !Join ['', [!Ref TaskDefinition]]
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
@@ -177,6 +172,7 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-group: !Ref LogGroup
               awslogs-stream-prefix: ecs
+
   ExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -188,6 +184,7 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws-cn:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
   TaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -224,15 +221,13 @@ Resources:
               - Effect: Allow
                 Action: '*'
                 Resource: '*'
+
   ContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Join ['', [!Ref ContainerSecurityGroup]]
+      GroupDescription: Container SecurityGroup
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 8443
-          ToPort: 8443
         - IpProtocol: tcp
           FromPort: 8080
           ToPort: 8080
@@ -262,12 +257,12 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
 
-  Outputs:
-    rdshost:
-      Value: !GetAtt RDSCluster.Endpoint.Address
-    rdsuser:
-      Value: !Ref DatabaseUsername
-    rdsdatabase:
-      Value: !Ref DatabaseName
-    rdspassword:
-      Value: !Ref DatabasePassword
+Outputs:
+  rdshost:
+    Value: !GetAtt RDSCluster.Endpoint.Address
+  rdsuser:
+    Value: !Ref DatabaseUsername
+  rdsdatabase:
+    Value: !Ref DatabaseName
+  rdspassword:
+    Value: !Ref DatabasePassword
