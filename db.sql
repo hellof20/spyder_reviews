@@ -1,4 +1,4 @@
-CREATE DATABASE spyder DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE spyder DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS customer_ratings;
 create table customer_ratings(

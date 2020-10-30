@@ -13,6 +13,8 @@ from google_play_scraper import Sort, reviews, app, reviews_all
 from concurrent.futures import ThreadPoolExecutor
 filterwarnings("ignore", category=pymysql.Warning)
 import spacy
+import re,random
+import requests
 
 error_log = "error.log"
 
@@ -104,8 +106,44 @@ def main():
                 reviews_df = pd.DataFrame(columns=reviews_name, data=reviews_result_list)
                 return reviews_df
 
-            if self.paltform == 'TapTap':
-                pass
+            if self.platform == 'TapTap':
+                HEADERS = {'Host': 'api.taptapdada.com','Connection': 'Keep-Alive','Accept-Encoding': 'gzip','User-Agent': 'okhttp/3.10.0'}
+                BASE_URL = 'https://api.taptapdada.com/review/v1/by-app?sort=new&app_id={}' \
+                    '&X-UA=V%3D1%26PN%3DTapTap%26VN_CODE%3D593%26LOC%3DCN%26LANG%3Dzh_CN%26CH%3Ddefault' \
+                    '%26UID%3D8a5b2b39-ad33-40f3-8634-eef5dcba01e4%26VID%3D7595643&from={}'
+                end_from = 20
+                reviews = []
+                reviews_result_list = []
+                for i in range(0, end_from+1, 10):
+                    url = BASE_URL.format(self.appid, i)
+                    try:
+                        resp = requests.get(url, headers=HEADERS).json()
+                        resp = resp.get('data').get('list')
+                        for r in resp:
+                            review = {}
+                            review['id'] = str(r.get('id'))
+                            review['author'] = r.get('author').get('name').encode('gbk', 'ignore').decode('gbk')
+                            review['updated_time'] = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(r.get('updated_time')))
+                            review['stars'] = r.get('score')
+                            content = r.get('contents').get('text').strip()
+                            review['content'] = re.sub('<br />|&nbsp', '', content).encode('gbk', 'ignore').decode('gbk')
+                            reviews.append(review)
+                        print('=============已爬取第 %d 页=============' % int(i/10))
+                        # 等待0至1秒，爬下一页
+                        if i != end_from:
+                            pause = random.uniform(0, 1)
+                            time.sleep(pause)
+                    except Exception as error:
+                        raise error
+                        exit()
+                for i in range(len(reviews)):
+                    values = reviews[i]
+                    reviews_result_list.append(
+                        [values['id'], self.appname, self.country, self.platform, values['updated_time'],
+                         values['author'], '', values['content'], values['stars']])
+                name = ['id', 'appname', 'country', 'platform', 'date', 'name', 'title', 'content', 'rating']
+                reviews_df = pd.DataFrame(columns=name, data=reviews_result_list)
+                return reviews_df
 
     def write_mysql(connect, dataframe, tablename):
         if tablename == 'customer_reviews_temp':
@@ -129,7 +167,7 @@ def main():
         content = df.iloc[line_num, 7]
         date = str(df.iloc[line_num, 4])
         rating = str(df.iloc[line_num, 8])
-        if content == '':
+        if content == '' or content is None:
             keyword_list = []
             nounphrases = []
             verbsphrases = []
@@ -157,7 +195,7 @@ def main():
     rdsuser = os.environ.get('rdsuser')
     rdspassword = os.environ.get('rdspassword')
     database = os.environ.get('rdsdatabase')
-    connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8')
+    connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8mb4')
     
     #处理app.csv文件
     s3 = boto3.resource('s3')
@@ -172,7 +210,7 @@ def main():
         # end_init = time.time()
         # print("init spend %d ms" % int((end_init - start_init)*1000))
         start_write_rating = time.time()
-        write_mysql(connect, game.appinfo(), 'customer_ratings')
+        # write_mysql(connect, game.appinfo(), 'customer_ratings')
         end_write_rating = time.time()
         print("write_rating spend %d ms" % int((end_write_rating - start_write_rating)*1000))
         start_write_reviews = time.time()

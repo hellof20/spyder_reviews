@@ -28,7 +28,7 @@ def create_thing(event, context):
         cur.execute("create table customer_reviews_temp(id VARCHAR(128),appname VARCHAR(128),country VARCHAR(16),platform varchar(16),date DATETIME,name VARCHAR(128),title TEXT,content TEXT,rating smallint,PRIMARY KEY ( id )) ENGINE=InnoDB  DEFAULT CHARSET=utf8;")
         cur.execute("create table customer_reviews(id VARCHAR(128),appname VARCHAR(128),country VARCHAR(16),platform varchar(16),date DATETIME,name VARCHAR(128),title TEXT,content TEXT,rating smallint,sentiment VARCHAR(500),keyword VARCHAR(1000),noun VARCHAR(500),adj VARCHAR(500),verb VARCHAR(500),entity VARCHAR(500),createtime DATETIME default CURRENT_TIMESTAMP,updatetime DATETIME default CURRENT_TIMESTAMP,PRIMARY KEY ( id ))ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;")
         conn.commit()
-    logger.info("SUCCESS: Added tables succeeded")    
+    logger.info("SUCCESS: Added tables succeeded")
     return {"PhysicalResourceId": "arn:aws:fake:myID"}
 
 @handler.update
