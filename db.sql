@@ -14,7 +14,7 @@ create table customer_ratings(
     3stars int,
     4starts int,
     5stars int)
-    ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+    ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS customer_reviews_temp;
 create table customer_reviews_temp(
@@ -28,7 +28,7 @@ create table customer_reviews_temp(
     content TEXT,
     rating smallint,
     PRIMARY KEY ( id )) 
-    ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+    ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS customer_reviews;
 create table customer_reviews(
@@ -50,4 +50,4 @@ create table customer_reviews(
     createtime DATETIME default CURRENT_TIMESTAMP,
     updatetime DATETIME default CURRENT_TIMESTAMP,
     PRIMARY KEY ( id ))
-    ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+    ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
