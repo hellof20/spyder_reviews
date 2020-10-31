@@ -27,7 +27,7 @@ create table customer_reviews_temp(
     title TEXT,
     content TEXT,
     rating smallint,
-    PRIMARY KEY ( id )) 
+    PRIMARY KEY ( id,platform )) 
     ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS customer_reviews;
@@ -49,5 +49,5 @@ create table customer_reviews(
     entity VARCHAR(500),
     createtime DATETIME default CURRENT_TIMESTAMP,
     updatetime DATETIME default CURRENT_TIMESTAMP,
-    PRIMARY KEY ( id ))
+    PRIMARY KEY ( id,platform ))
     ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
