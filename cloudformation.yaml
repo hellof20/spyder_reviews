@@ -13,9 +13,13 @@ Parameters:
     Type: String
     Default: app.csv
     Description: The description file name
+  lambdaFunctionKey:
+    Type: String
+    Default: initdb_lambda.zip
+    Description: The description file name    
   bucketname:
     Type: String
-    Description: The description file s3 location
+    Description: The files s3 bucket name
   DatabasePassword:
     AllowedPattern: "[a-zA-Z0-9]+"
     ConstraintDescription: must contain only alphanumeric characters. Must have length 8-41.
@@ -46,8 +50,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code: 
-        S3Bucket: pwm-virginia
-        S3Key: function.zip
+        S3Bucket: !Ref bucketname
+        S3Key: !Ref lambdaFunctionKey
       Handler: app.handler
       Role: !GetAtt MyFuncRole.Arn
       Runtime: python3.8
