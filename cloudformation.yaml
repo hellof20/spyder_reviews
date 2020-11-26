@@ -1,0 +1,274 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: comprehend analyize on AWS.
+Parameters:
+  VPC:
+    Type: AWS::EC2::VPC::Id
+  publicSubnetA:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public Subnet
+  publicSubnetB:
+    Type: AWS::EC2::Subnet::Id
+    Description: Another Public Subnet
+  appkey:
+    Type: String
+    Default: app.csv
+    Description: The description file name
+  lambdaFunctionKey:
+    Type: String
+    Default: initdb_lambda.zip
+    Description: The description file name    
+  bucketname:
+    Type: String
+    Description: The files s3 bucket name
+  DatabasePassword:
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: must contain only alphanumeric characters. Must have length 8-41.
+    Description: The database admin account password. (Choose a secure password)
+    MaxLength: '41'
+    MinLength: '8'
+    NoEcho: 'true'
+    Type: String
+  DatabaseUsername:
+    Default: "admin"
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: must contain only alphanumeric characters. Must have length 1-16
+    Description: The database admin account user name. (Default "prisma")
+    MaxLength: '16'
+    MinLength: '1'
+    Type: String
+  DatabaseName:
+    Default: "reviews"
+    AllowedPattern: "[a-zA-Z0-9]+"
+    ConstraintDescription: must contain only alphanumeric characters. Must have length 1-16
+    Description: The database admin account user name. (Default "prisma")
+    MaxLength: '16'
+    MinLength: '1'
+    Type: String
+
+Resources:
+  MyFunc:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: 
+        S3Bucket: !Ref bucketname
+        S3Key: !Ref lambdaFunctionKey
+      Handler: app.handler
+      Role: !GetAtt MyFuncRole.Arn
+      Runtime: python3.8
+      Timeout: 120
+      VpcConfig:
+          SecurityGroupIds:
+              - !Ref DatabaseSecurityGroup
+          SubnetIds:
+              - !Ref publicSubnetA
+              - !Ref publicSubnetB
+      Environment:
+        Variables:
+          db_endpoint: !GetAtt RDSCluster.Endpoint.Address
+          db_name: 
+            Ref: DatabaseName
+          db_password: 
+            Ref: DatabasePassword
+          db_username: 
+            Ref: DatabaseUsername
+
+  Initdb:
+    Type: Custom::Initdb
+    Properties:
+      ServiceToken: !GetAtt MyFunc.Arn
+
+  MyFuncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: policyforlambda
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'            
+  RDSCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      MasterUsername: 
+        Ref: DatabaseUsername
+      MasterUserPassword: 
+        Ref: DatabasePassword
+      DatabaseName: 
+        Ref: DatabaseName
+      Engine: aurora
+      EngineMode: serverless
+      ScalingConfiguration:
+        AutoPause: true
+        MaxCapacity: 16
+        MinCapacity: 2
+        SecondsUntilAutoPause: 300
+      DBSubnetGroupName:
+        Ref: DatabaseSubnetGroup
+      VpcSecurityGroupIds:
+        - !Ref DatabaseSecurityGroup
+      ScalingConfiguration:
+        AutoPause: true
+        MinCapacity: 2
+        MaxCapacity: 16
+        SecondsUntilAutoPause: 1000
+  
+  Cluster: 
+    Type: AWS::ECS::Cluster
+
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Database subnet group. Suggest put database in private subnet.
+      SubnetIds:
+          - !Ref publicSubnetA
+          - !Ref publicSubnetB
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      VpcId: !Ref VPC
+      GroupDescription: database SecurityGroup
+      SecurityGroupIngress:
+        FromPort: 3306
+        ToPort: 3306
+        IpProtocol: tcp
+        CidrIp: 0.0.0.0/0  
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn: LogGroup
+    Properties:
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 4096
+      Memory: 30GB
+      ExecutionRoleArn: !Ref ExecutionRole
+      TaskRoleArn: !Ref TaskRole
+      ContainerDefinitions:
+        - Name: container
+          Image: hellof20/reviews:spacy
+          Environment:
+            - Name: rdshost
+              Value: !GetAtt RDSCluster.Endpoint.Address
+            - Name: rdsuser
+              Value: !Ref DatabaseUsername
+            - Name: rdspassword
+              Value: !Ref DatabasePassword
+            - Name: rdsdatabase
+              Value: !Ref DatabaseName
+            - Name: appbucket
+              Value: !Ref bucketname
+            - Name: appkey
+              Value: !Ref appkey
+            - Name: region
+              Value: !Ref "AWS::Region"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: ecs
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws-cn:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: policyfortask
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+  ScheduleRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com 
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: policyfortask
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Container SecurityGroup
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+
+  ScheduledTaskRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: 'rate(1 day)'
+      State: ENABLED
+      RoleArn: !GetAtt ScheduleRuleRole.Arn
+      Targets:
+        - Arn: !GetAtt Cluster.Arn
+          RoleArn: !GetAtt ScheduleRuleRole.Arn
+          Id: "randomstring"
+          EcsParameters:
+            TaskDefinitionArn: !Ref TaskDefinition
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                SecurityGroups:
+                  - !Ref ContainerSecurityGroup
+                Subnets:
+                  - !Ref publicSubnetA
+                  - !Ref publicSubnetB
+                AssignPublicIp: "ENABLED"
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+
+Outputs:
+  rdshost:
+    Value: !GetAtt RDSCluster.Endpoint.Address
+  rdsuser:
+    Value: !Ref DatabaseUsername
+  rdsdatabase:
+    Value: !Ref DatabaseName
+  rdspassword:
+    Value: !Ref DatabasePassword
