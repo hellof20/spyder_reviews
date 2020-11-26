@@ -156,7 +156,7 @@ Resources:
       TaskRoleArn: !Ref TaskRole
       ContainerDefinitions:
         - Name: container
-          Image: hellof20/reviews:spacy
+          Image: hellof20/reviews:comprehend
           Environment:
             - Name: rdshost
               Value: !GetAtt RDSCluster.Endpoint.Address
