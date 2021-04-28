@@ -3,10 +3,10 @@ Description: comprehend analyize on AWS.
 Parameters:
   VPC:
     Type: AWS::EC2::VPC::Id
-  publicSubnetA:
+  publicSubnet1:
     Type: AWS::EC2::Subnet::Id
     Description: Public Subnet
-  publicSubnetB:
+  publicSubnet2:
     Type: AWS::EC2::Subnet::Id
     Description: Another Public Subnet
   appkey:
@@ -62,8 +62,8 @@ Resources:
           SecurityGroupIds:
               - !Ref DatabaseSecurityGroup
           SubnetIds:
-              - !Ref publicSubnetA
-              - !Ref publicSubnetB
+              - !Ref publicSubnet1
+              - !Ref publicSubnet2
       Environment:
         Variables:
           db_endpoint: !GetAtt RDSCluster.Endpoint.Address
@@ -131,8 +131,8 @@ Resources:
     Properties:
       DBSubnetGroupDescription: Database subnet group.
       SubnetIds:
-          - !Ref publicSubnetA
-          - !Ref publicSubnetB
+          - !Ref publicSubnet1
+          - !Ref publicSubnet2
 
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -256,8 +256,8 @@ Resources:
                 SecurityGroups:
                   - !Ref ContainerSecurityGroup
                 Subnets:
-                  - !Ref publicSubnetA
-                  - !Ref publicSubnetB
+                  - !Ref publicSubnet1
+                  - !Ref publicSubnet2
                 AssignPublicIp: "ENABLED"
 
   LogGroup:
