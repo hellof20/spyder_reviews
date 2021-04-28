@@ -17,9 +17,9 @@ Parameters:
   #   Type: String
   #   Default: initdb_lambda.zip
   #   Description: The description file name    
-  # bucketname:
-  #   Type: String
-  #   Description: The files s3 bucket name
+  bucketname:
+    Type: String
+    Description: The files s3 bucket name
   DatabasePassword:
     AllowedPattern: "[a-zA-Z0-9]+"
     ConstraintDescription: must contain only alphanumeric characters. Must have length 8-41.
