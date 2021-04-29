@@ -37,11 +37,11 @@ class App(object):
             ratingresponse = urllib.request.urlopen(ratingrequest)
             ratingjson = json.loads(ratingresponse.read().decode())
             totalNumberOfReviews = ratingjson['totalNumberOfReviews']
-            ratingname = ['appname', 'country', 'platform', 'date', 'totalNumberOfReviews', 'ratingAverage',
+            ratingname = ['appid', 'appname', 'country', 'platform', 'date', 'totalNumberOfReviews', 'ratingAverage',
                             'ratingCount', '1stars', '2stars', '3stars', '4starts', '5stars']
             rating_result_list = []
             rating_result_list.append(
-                [self.appname, self.country, self.platform, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                [self.appid, self.appname, self.country, self.platform, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                     ratingjson['totalNumberOfReviews'], ratingjson['ratingAverage'], ratingjson['ratingCount'],
                     ratingjson['ratingCountList'][0], ratingjson['ratingCountList'][1],
                     ratingjson['ratingCountList'][2], ratingjson['ratingCountList'][3],
@@ -85,7 +85,7 @@ class App(object):
                 result_list.append(
                     [values['userReviewId'], self.appid, self.appname, self.country, self.platform, values['date'],
                         values['name'], values['title'], values['body'], values['rating']])
-            name = ['id', 'appname', 'country', 'platform', 'date', 'name', 'title', 'content', 'rating']
+            name = ['id', 'appid', 'appname', 'country', 'platform', 'date', 'name', 'title', 'content', 'rating']
             reviews_df = pd.DataFrame(columns=name, data=result_list)
             return reviews_df
 
@@ -139,9 +139,9 @@ class App(object):
             for i in range(len(reviews)):
                 values = reviews[i]
                 reviews_result_list.append(
-                    [values['id'], self.appname, self.country, self.platform, values['updated_time'],
+                    [values['id'], self.appid, self.appname, self.country, self.platform, values['updated_time'],
                         values['author'], '', values['content'], values['stars']])
-            name = ['id', 'appname', 'country', 'platform', 'date', 'name', 'title', 'content', 'rating']
+            name = ['id','appid', 'appname', 'country', 'platform', 'date', 'name', 'title', 'content', 'rating']
             reviews_df = pd.DataFrame(columns=name, data=reviews_result_list)
             return reviews_df
 
@@ -210,7 +210,7 @@ rdspassword = os.environ.get('rdspassword')
 database = os.environ.get('rdsdatabase')
 connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8mb4')
 
-def main(:)
+def main():
 #处理app.csv
     s3 = boto3.resource('s3')
     appbucket = os.environ.get('appbucket')
@@ -223,7 +223,7 @@ def main(:)
         start_write_reviews = time.time()
         write_mysql(connect, game.reviews(), 'customer_reviews_temp')
         end_write_reviews = time.time()
-        sql_cmd = "select id,appname,country,platform,date,name,title,content,rating from customer_reviews_temp where id not in (select id from customer_reviews);"
+        sql_cmd = "select id,appid,appname,country,platform,date,name,title,content,rating from customer_reviews_temp where id not in (select id from customer_reviews);"
         df = pd.read_sql(sql=sql_cmd, con=connect)
         num = df.shape[0]
         if num > 0:

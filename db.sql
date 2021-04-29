@@ -1,7 +1,8 @@
-CREATE DATABASE spyder DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE reviews DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 DROP TABLE IF EXISTS customer_ratings;
 create table customer_ratings(
+    appid VARCHAR(128),
     appname varchar(128),
     country varchar(16),
     platform varchar(16),
