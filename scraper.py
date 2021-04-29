@@ -159,7 +159,7 @@ def logger_error(logs):
     f.write("\t".join(write_logs) + '\n')
     f.close()
 
-def do_comprehend(df, line_num):
+def do_comprehend(df, line_num, num):
     appname = df.iloc[line_num, 2]
     platform = df.iloc[line_num, 4]
     comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
@@ -192,7 +192,7 @@ def do_comprehend(df, line_num):
             line_dict = df.loc[line_num].to_dict()
             line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
             line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
-            print('%s, %s, 总共 %s , 已处理 %d 条' % (appname, platform, line_num, line_num + 1))
+            print('%s, %s, 总共 %s , 已处理 %d 条' % (appname, platform, num, line_num + 1))
         except BaseException as e:
             s = sys.exc_info()
             #print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
@@ -229,7 +229,7 @@ def main():
             print("%s %s %s %s 有 %d 条新增评论 ... " % (game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3],num))
             with ThreadPoolExecutor(3) as executor:
                 for line_num in range(0, num):
-                    executor.submit(do_comprehend, df, line_num)
+                    executor.submit(do_comprehend, df, line_num, num)
             print('评论处理完毕')
             print('-------------------------------------------------------------')
         else:
