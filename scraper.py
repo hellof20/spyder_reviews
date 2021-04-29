@@ -161,6 +161,7 @@ def logger_error(logs):
 
 def do_comprehend(df, line_num):
     appname = df.iloc[line_num, 2]
+    platform = df.iloc[line_num, 4]
     comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
     content = df.iloc[line_num, 8]
     bytes_content = content.encode("utf-8")
@@ -191,14 +192,14 @@ def do_comprehend(df, line_num):
             line_dict = df.loc[line_num].to_dict()
             line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
             line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
-            print('应用 %s, 总共 %s , 已处理 %d 条' % (appname, len(bytes_content), line_num + 1))
+            print('%s, %s, 总共 %s , 已处理 %d 条' % (appname, platform, len(bytes_content), line_num + 1))
         except BaseException as e:
             s = sys.exc_info()
             #print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
             print("不支持的语言")
-            logger_error(["不支持的语言 id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
+            logger_error([appname, platform, "不支持的语言  id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
     else:
-        logger_error(['评论内容长度为0 id：' + str(df.iloc[line_num, 0])])
+        logger_error([appname, platform, '评论内容长度为0  id：' + str(df.iloc[line_num, 0])])
 
 
 
