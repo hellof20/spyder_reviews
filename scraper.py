@@ -145,9 +145,6 @@ class App(object):
             reviews_df = pd.DataFrame(columns=name, data=reviews_result_list)
             return reviews_df
 
-
-
-
 def write_mysql(connect, dataframe, tablename):
     if tablename == 'customer_reviews_temp':
         dataframe.to_sql(tablename, connect, if_exists='replace', index=False)
@@ -163,11 +160,12 @@ def logger_error(logs):
     f.close()
 
 def do_comprehend(df, line_num):
+    appname = df.iloc[line_num, 2]
     comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
-    content = df.iloc[line_num, 7]
+    content = df.iloc[line_num, 8]
     bytes_content = content.encode("utf-8")
-    date = str(df.iloc[line_num, 4])
-    rating = str(df.iloc[line_num, 8])
+    date = str(df.iloc[line_num, 5])
+    rating = str(df.iloc[line_num, 9])
     len_utf8 = len(bytes_content)
     if len_utf8 > 5000:
         bytes_0_5000 = bytes_content[0:5000]
@@ -193,7 +191,7 @@ def do_comprehend(df, line_num):
             line_dict = df.loc[line_num].to_dict()
             line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
             line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
-            print('已处理 %d 条' % (line_num + 1))
+            print('应用 %s, 总共 %s, 已处理 %d 条' % (appname, len(bytes_content), line_num + 1))
         except BaseException as e:
             s = sys.exc_info()
             #print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
