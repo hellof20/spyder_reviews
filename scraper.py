@@ -210,41 +210,32 @@ rdspassword = os.environ.get('rdspassword')
 database = os.environ.get('rdsdatabase')
 connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8mb4')
 
-
-s3 = boto3.resource('s3')
-appbucket = os.environ.get('appbucket')
-appkey = os.environ.get('appkey')
-s3.meta.client.download_file(appbucket, appkey, 'app.csv')
-game_df = pd.read_csv('app.csv')
-game_num = game_df.shape[0]
-for i in range(0,game_num):
-    game = App(game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3])
-    #start_write_rating = time.time()
-    #end_write_rating = time.time()
-    #print("write_rating spend %d ms" % int((end_write_rating - start_write_rating)*1000))
-    start_write_reviews = time.time()
-    write_mysql(connect, game.reviews(), 'customer_reviews_temp')
-    end_write_reviews = time.time()
-    #print("write_reviews spend %d ms" % int((end_write_reviews - start_write_reviews)*1000))
-    ##comprehend对评论数据进行处理部分
-    sql_cmd = "select id,appname,country,platform,date,name,title,content,rating from customer_reviews_temp where id not in (select id from customer_reviews);"
-    df = pd.read_sql(sql=sql_cmd, con=connect)
-    num = df.shape[0]
-    if num > 0:
-        print("%s %s %s %s 有 %d 条新增评论 ... " % (game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3],num))
-        with ThreadPoolExecutor(3) as executor:
-            for line_num in range(0, num):
-                executor.submit(do_comprehend, df, line_num)
-        print('评论处理完毕')
-        print('-------------------------------------------------------------')
-    else:
-        print("%s %s %s %s 没有新增评论 " % (game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3]))
-        print('-------------------------------------------------------------')
-
-
-
-
-
+def main(:)
+#处理app.csv
+    s3 = boto3.resource('s3')
+    appbucket = os.environ.get('appbucket')
+    appkey = os.environ.get('appkey')
+    s3.meta.client.download_file(appbucket, appkey, 'app.csv')
+    game_df = pd.read_csv('app.csv')
+    game_num = game_df.shape[0]
+    for i in range(0,game_num):
+        game = App(game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3])
+        start_write_reviews = time.time()
+        write_mysql(connect, game.reviews(), 'customer_reviews_temp')
+        end_write_reviews = time.time()
+        sql_cmd = "select id,appname,country,platform,date,name,title,content,rating from customer_reviews_temp where id not in (select id from customer_reviews);"
+        df = pd.read_sql(sql=sql_cmd, con=connect)
+        num = df.shape[0]
+        if num > 0:
+            print("%s %s %s %s 有 %d 条新增评论 ... " % (game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3],num))
+            with ThreadPoolExecutor(3) as executor:
+                for line_num in range(0, num):
+                    executor.submit(do_comprehend, df, line_num)
+            print('评论处理完毕')
+            print('-------------------------------------------------------------')
+        else:
+            print("%s %s %s %s 没有新增评论 " % (game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3]))
+            print('-------------------------------------------------------------')
 
 
 if __name__ == '__main__':
