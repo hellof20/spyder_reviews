@@ -192,7 +192,7 @@ def do_comprehend(df, line_num):
             line_dict = df.loc[line_num].to_dict()
             line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
             line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
-            print('%s, %s, 总共 %s , 已处理 %d 条' % (appname, platform, len(bytes_content), line_num + 1))
+            print('%s, %s, 总共 %s , 已处理 %d 条' % (appname, platform, line_num, line_num + 1))
         except BaseException as e:
             s = sys.exc_info()
             #print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
