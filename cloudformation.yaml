@@ -3,20 +3,20 @@ Description: comprehend analyize on AWS.
 Parameters:
   VPC:
     Type: AWS::EC2::VPC::Id
-  publicSubnetA:
+  publicSubnet1:
     Type: AWS::EC2::Subnet::Id
     Description: Public Subnet
-  publicSubnetB:
+  publicSubnet2:
     Type: AWS::EC2::Subnet::Id
     Description: Another Public Subnet
   appkey:
     Type: String
     Default: app.csv
     Description: The description file name
-  lambdaFunctionKey:
-    Type: String
-    Default: initdb_lambda.zip
-    Description: The description file name    
+  # lambdaFunctionKey:
+  #   Type: String
+  #   Default: initdb_lambda.zip
+  #   Description: The description file name    
   bucketname:
     Type: String
     Description: The files s3 bucket name
@@ -50,8 +50,10 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code: 
-        S3Bucket: !Ref bucketname
-        S3Key: !Ref lambdaFunctionKey
+        # S3Bucket: !Ref bucketname
+        # S3Key: !Ref lambdaFunctionKey
+        S3Bucket: 'pwm-singapore'
+        S3Key: 'initdb_lambda.zip'        
       Handler: app.handler
       Role: !GetAtt MyFuncRole.Arn
       Runtime: python3.8
@@ -60,8 +62,8 @@ Resources:
           SecurityGroupIds:
               - !Ref DatabaseSecurityGroup
           SubnetIds:
-              - !Ref publicSubnetA
-              - !Ref publicSubnetB
+              - !Ref publicSubnet1
+              - !Ref publicSubnet2
       Environment:
         Variables:
           db_endpoint: !GetAtt RDSCluster.Endpoint.Address
@@ -129,8 +131,8 @@ Resources:
     Properties:
       DBSubnetGroupDescription: Database subnet group. Suggest put database in private subnet.
       SubnetIds:
-          - !Ref publicSubnetA
-          - !Ref publicSubnetB
+          - !Ref publicSubnet1
+          - !Ref publicSubnet2
 
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -256,8 +258,8 @@ Resources:
                 SecurityGroups:
                   - !Ref ContainerSecurityGroup
                 Subnets:
-                  - !Ref publicSubnetA
-                  - !Ref publicSubnetB
+                  - !Ref publicSubnet1
+                  - !Ref publicSubnet2
                 AssignPublicIp: "ENABLED"
 
   LogGroup:

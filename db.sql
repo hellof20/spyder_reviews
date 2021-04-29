@@ -19,6 +19,7 @@ create table customer_ratings(
 DROP TABLE IF EXISTS customer_reviews_temp;
 create table customer_reviews_temp(
     id VARCHAR(128),
+    appid VARCHAR(128),
     appname VARCHAR(128),
     country VARCHAR(16),
     platform varchar(16),
@@ -33,6 +34,7 @@ create table customer_reviews_temp(
 DROP TABLE IF EXISTS customer_reviews;
 create table customer_reviews(
     id VARCHAR(128),
+    appid VARCHAR(128),    
     appname VARCHAR(128),
     country VARCHAR(16),
     platform varchar(16),
