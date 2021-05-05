@@ -12,7 +12,6 @@ from warnings import filterwarnings
 from google_play_scraper import Sort, reviews, app, reviews_all
 from concurrent.futures import ThreadPoolExecutor
 filterwarnings("ignore", category=pymysql.Warning)
-#import spacy
 import re,random
 import requests
 
@@ -135,7 +134,6 @@ class App(object):
                         time.sleep(pause)
                 except Exception as error:
                     raise error
-                    exit()
             for i in range(len(reviews)):
                 values = reviews[i]
                 reviews_result_list.append(
@@ -151,7 +149,6 @@ def write_mysql(connect, dataframe, tablename):
     else:
         dataframe.to_sql(tablename, connect, if_exists='append', index=False)
 
-# logs为 list
 def logger_error(logs):
     write_logs = [time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())]
     write_logs.extend(logs)
@@ -159,49 +156,37 @@ def logger_error(logs):
     f.write("\t".join(write_logs) + '\n')
     f.close()
 
-def do_comprehend(df, line_num, num):
-    appname = df.iloc[line_num, 2]
-    platform = df.iloc[line_num, 4]
-    comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
-    content = df.iloc[line_num, 8]
-    bytes_content = content.encode("utf-8")
-    date = str(df.iloc[line_num, 5])
-    rating = str(df.iloc[line_num, 9])
-    len_utf8 = len(bytes_content)
-    if len_utf8 > 5000:
-        bytes_0_5000 = bytes_content[0:5000]
-        content = bytes_0_5000.decode('utf-8', errors='ignore')
-    if len(content) > 0:
-        language_code = comprehend.detect_dominant_language(Text=content)
-        code = language_code['Languages'][0]['LanguageCode']
-        try:
-            sentiments = comprehend.detect_sentiment(Text=content, LanguageCode=code)
-            phrases = comprehend.detect_key_phrases(Text=content, LanguageCode=code)
-            entities = comprehend.detect_entities(Text=content, LanguageCode=code)
-            entities_list = []
-            keyword_list = []
-            for i in phrases['KeyPhrases']:
-                keyword_list.append(i['Text'])
-            for i in entities['Entities']:
-                entities_list.append(i['Text'])
-            df.loc[line_num, "keyword"] = "|".join(keyword_list)
-            df.loc[line_num, "entity"] = "|".join(entities_list)
-            df.loc[line_num, "sentiment"] = str(sentiments['Sentiment'])
-            df.loc[line_num, "date"] = date
-            df.loc[line_num, "rating"] = rating
-            line_dict = df.loc[line_num].to_dict()
-            line_df = pd.DataFrame.from_dict(line_dict, orient='index').T
-            line_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
-            print('%s, %s, 总共 %s , 已处理 %d 条' % (appname, platform, num, line_num + 1))
-        except BaseException as e:
-            s = sys.exc_info()
-            #print("Error '%s' happened on line %d" % (s[1], s[2].tb_lineno))
-            print("不支持的语言")
-            logger_error([appname, platform, "不支持的语言  id：" + str(df.iloc[line_num, 0]), "LanguageCode："+ code])
-    else:
-        logger_error([appname, platform, '评论内容长度为0  id：' + str(df.iloc[line_num, 0])])
+def do_translate(df):
+    content = df['content']
+    code = df['lang']
+    try:
+        if code in translate_list:
+            response = translate.translate_text(
+                Text=content,
+                SourceLanguageCode=code,
+                TargetLanguageCode='zh')
+            return response['TranslatedText']
+    except BaseException as e:
+        print("翻译不支持的语言")
+        logger_error([df['appname'], df['platform'], '翻译不支持的语言  id：' + df['id'], ' 内容：'+ df['content']])        
+    
+def do_detect_language(df):
+    content = df['content']
+    language_code = comprehend.detect_dominant_language(Text=content)
+    code = language_code['Languages'][0]['LanguageCode']
+    return code
 
+def do_detect_sentiment(df):
+    content = df['content']
+    code = df['lang']
+    try:
+        sentiment = comprehend.detect_sentiment(Text=content, LanguageCode=code)
+        return sentiment['Sentiment']
+    except BaseException as e:
+        print("Sentiment不支持的语言")
+        logger_error([df['appname'], df['platform'], 'Sentiment不支持的语言  id：' + df['id'] ,' 内容：'+ df['content']])
 
+start = time.time()
 
 rdshost = os.environ.get('rdshost')
 rdsuser = os.environ.get('rdsuser')
@@ -209,37 +194,47 @@ rdspassword = os.environ.get('rdspassword')
 database = os.environ.get('rdsdatabase')
 connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8mb4')
 
-def main():
+#translate
+translate = boto3.client('translate')
+translate_df = pd.read_csv('./translate.csv')
+translate_num = translate_df.shape[0]
+translate_list = []
+for i in range(0, translate_num):
+    translate_list.append(translate_df.iloc[i, 0])
+print(translate_list)
+
+#comprehend
+comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
+
 #处理app.csv
-    s3 = boto3.resource('s3')
-    appbucket = os.environ.get('appbucket')
-    appkey = os.environ.get('appkey')
-    s3.meta.client.download_file(appbucket, appkey, 'app.csv')
-    game_df = pd.read_csv('app.csv')
-    game_num = game_df.shape[0]
-    for i in range(0,game_num):
-        game = App(game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3])
-        start_write_reviews = time.time()
-        write_mysql(connect, game.reviews(), 'customer_reviews_temp')
-        end_write_reviews = time.time()
-        sql_cmd = "select id,appid,appname,country,platform,date,name,title,content,rating from customer_reviews_temp where id not in (select id from customer_reviews);"
-        df = pd.read_sql(sql=sql_cmd, con=connect)
-        num = df.shape[0]
-        if num > 0:
-            print("%s %s %s %s 有 %d 条新增评论 ... " % (game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3],num))
-            with ThreadPoolExecutor(3) as executor:
-                for line_num in range(0, num):
-                    executor.submit(do_comprehend, df, line_num, num)
-            print('评论处理完毕')
-            print('-------------------------------------------------------------')
-        else:
-            print("%s %s %s %s 没有新增评论 " % (game_df.iloc[i,0],game_df.iloc[i,1],game_df.iloc[i,2],game_df.iloc[i,3]))
-            print('-------------------------------------------------------------')
+s3 = boto3.resource('s3')
+appbucket = os.environ.get('appbucket')
+appkey = os.environ.get('appkey')
+s3.meta.client.download_file(appbucket, appkey, 'app.csv')
+app_df = pd.read_csv('app.csv')
+app_num = app_df.shape[0]
 
+for i in range(0,app_num):
+    app = App(app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3])
+    write_mysql(connect, app.reviews(), 'customer_reviews_temp')
+    sql_cmd = "select * from customer_reviews_temp where id not in (select id from customer_reviews);"
+    reviews_df = pd.read_sql(sql=sql_cmd, con=connect)
+    reviews_df = reviews_df.loc[ reviews_df['content'].str.len() > 0 ]
+    reviews_df = reviews_df.loc[ reviews_df['content'].str.len() < 2000]
+    num = reviews_df.shape[0]
+    if num > 0:
+        print('-------------------------------------------------------------')
+        print("%s %s %s %s 有 %d 条新增评论 ... " % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3],num))
+        # reviews_df['lang'] = reviews_df.apply(do_detect_language, axis=1)
+        # reviews_df['sentiment'] = reviews_df.apply(do_detect_sentiment, axis=1)
+        # reviews_df['content_cn'] = reviews_df.apply(do_translate, axis=1)
+        # reviews_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
+        print('评论处理完毕')
+        print('-------------------------------------------------------------')
+    else:
+        print("%s %s %s %s 没有新增评论 " % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3]))
+        print('-------------------------------------------------------------')
 
-if __name__ == '__main__':
-    start = time.time()
-    main()
-    end = time.time()
-    spend = (end - start)
-    print("spend %s s" % spend)
+end = time.time()
+spend = (end - start)
+print("总共花费时间为 %s秒" % spend)

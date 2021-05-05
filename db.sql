@@ -50,6 +50,8 @@ create table customer_reviews(
     adj VARCHAR(500),
     verb VARCHAR(500),
     entity VARCHAR(500),
+    lang VARCHAR(16),
+    content_cn TEXT,
     createtime DATETIME default CURRENT_TIMESTAMP,
     updatetime DATETIME default CURRENT_TIMESTAMP,
     PRIMARY KEY ( id ))
