@@ -197,7 +197,7 @@ appbucket = os.environ.get('appbucket')
 #s3
 s3 = boto3.resource('s3')
 # translate
-translate = boto3.client('translate')
+translate = boto3.client('translate', region_name=os.environ.get('region'))
 #comprehend
 comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
 
