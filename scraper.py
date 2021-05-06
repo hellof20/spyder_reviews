@@ -142,7 +142,10 @@ class App(object):
 
 def write_mysql(connect, dataframe, tablename):
     if tablename == 'customer_reviews_temp':
-        dataframe.to_sql(tablename, connect, if_exists='replace', index=False)
+        try:
+            pd.read_sql(sql='truncate table customer_reviews_temp;', con=connect)
+        except:
+            dataframe.to_sql(tablename, connect, if_exists='append', index=False)
     else:
         dataframe.to_sql(tablename, connect, if_exists='append', index=False)
 
@@ -164,7 +167,7 @@ def do_translate(df):
                 TargetLanguageCode='zh')
             return response['TranslatedText']
     except BaseException as e:
-        print("翻译不支持的语言")
+        print("不支持翻译的语言")
         logger_error([df['appname'], df['platform'], '翻译不支持的语言  id：' + df['id'], ' 内容：'+ df['content']])        
     
 def do_detect_language(df):
@@ -180,7 +183,7 @@ def do_sentiment(df):
         sentiment = comprehend.detect_sentiment(Text=content, LanguageCode=code)
         return sentiment['Sentiment']
     except BaseException as e:
-        print("Sentiment不支持的语言")
+        print("不支持情感分析的语言")
         logger_error([df['appname'], df['platform'], 'Sentiment不支持的语言  id：' + df['id'] ,' 内容：'+ df['content']])
 
 start = time.time()
@@ -190,7 +193,7 @@ rdspassword = os.environ.get('rdspassword')
 database = os.environ.get('rdsdatabase')
 connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8mb4')
 appbucket = os.environ.get('appbucket')
-appkey = os.environ.get('appkey')
+# appkey = os.environ.get('appkey')
 #s3
 s3 = boto3.resource('s3')
 # translate
@@ -199,7 +202,7 @@ translate = boto3.client('translate')
 comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
 
 #translate.csv
-s3.meta.client.download_file(appbucket, appkey, 'translate.csv')
+s3.meta.client.download_file(appbucket, 'translate.csv', 'translate.csv')
 translate_df = pd.read_csv('translate.csv')
 translate_num = translate_df.shape[0]
 translate_list = []
@@ -207,30 +210,35 @@ for i in range(0, translate_num):
     translate_list.append(translate_df.iloc[i, 0])
 
 #处理app.csv
-s3.meta.client.download_file(appbucket, appkey, 'app.csv')
+s3.meta.client.download_file(appbucket, 'app.csv', 'app.csv')
 app_df = pd.read_csv('app.csv')
 app_num = app_df.shape[0]
 
 for i in range(0,app_num):
+    print('-------------------------------------------------------------')
+    print("开始下载%s %s %s %s 的评论 ... " % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3]))
     app = App(app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3])
+    #插入所有评论到customer_reviews_temp表
     write_mysql(connect, app.reviews(), 'customer_reviews_temp')
-    sql_cmd = "select * from customer_reviews_temp where id not in (select id from customer_reviews);"
+    print("%s %s %s %s 的评论下载完成" % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3]))
+    #获取增量评论
+    sql_cmd = "select id,appid,appname,country,country,platform,date,name,title,content,rating from customer_reviews_temp where id not in (select id from customer_reviews) and appid = '"+app_df.iloc[i,3]+"';"
     reviews_df = pd.read_sql(sql=sql_cmd, con=connect)
     reviews_df = reviews_df.loc[ reviews_df['content'].str.len() > 0 ]
     reviews_df = reviews_df.loc[ reviews_df['content'].str.len() < 1000]
     num = reviews_df.shape[0]
     if num > 0:
-        print('-------------------------------------------------------------')
         print("%s %s %s %s 有 %d 条新增评论 ... " % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3],num))
+        print('开始识别评论内容语言...')
         reviews_df['lang'] = reviews_df.apply(do_detect_language, axis=1)
+        print('开始识别评论内容情感分析...')
         reviews_df['sentiment'] = reviews_df.apply(do_sentiment, axis=1)
+        print('翻译评论内容')
         reviews_df['content_cn'] = reviews_df.apply(do_translate, axis=1)
         reviews_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
         print('评论处理完毕')
-        print('-------------------------------------------------------------')
     else:
         print("%s %s %s %s 没有新增评论 " % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3]))
-        print('-------------------------------------------------------------')
 
 end = time.time()
 spend = (end - start)
