@@ -15,8 +15,6 @@ filterwarnings("ignore", category=pymysql.Warning)
 import re,random
 import requests
 
-error_log = "error.log"
-
 class App(object):
     def __init__(self, appname, platform, country, appid):
         self.appname = appname
@@ -78,7 +76,6 @@ class App(object):
             myjson = json.loads(response.read().decode())
             reviews = myjson['userReviewList']
             result_list = []
-            # print("%s在%s总计%s行" % (self.appname, self.platform, len(reviews)))
             for i in range(len(reviews)):
                 values = reviews[i]
                 result_list.append(
@@ -109,7 +106,7 @@ class App(object):
             BASE_URL = 'https://api.taptapdada.com/review/v1/by-app?sort=new&app_id={}' \
                 '&X-UA=V%3D1%26PN%3DTapTap%26VN_CODE%3D593%26LOC%3DCN%26LANG%3Dzh_CN%26CH%3Ddefault' \
                 '%26UID%3D8a5b2b39-ad33-40f3-8634-eef5dcba01e4%26VID%3D7595643&from={}'
-            end_from = 20
+            end_from = 200
             reviews = []
             reviews_result_list = []
             for i in range(0, end_from+1, 10):
@@ -152,7 +149,7 @@ def write_mysql(connect, dataframe, tablename):
 def logger_error(logs):
     write_logs = [time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())]
     write_logs.extend(logs)
-    f = open(error_log, 'a')
+    f = open('error.log', 'a')
     f.write("\t".join(write_logs) + '\n')
     f.close()
 
@@ -176,7 +173,7 @@ def do_detect_language(df):
     code = language_code['Languages'][0]['LanguageCode']
     return code
 
-def do_detect_sentiment(df):
+def do_sentiment(df):
     content = df['content']
     code = df['lang']
     try:
@@ -187,29 +184,29 @@ def do_detect_sentiment(df):
         logger_error([df['appname'], df['platform'], 'Sentiment不支持的语言  id：' + df['id'] ,' 内容：'+ df['content']])
 
 start = time.time()
-
 rdshost = os.environ.get('rdshost')
 rdsuser = os.environ.get('rdsuser')
 rdspassword = os.environ.get('rdspassword')
 database = os.environ.get('rdsdatabase')
 connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8mb4')
-
-#translate
+appbucket = os.environ.get('appbucket')
+appkey = os.environ.get('appkey')
+#s3
+s3 = boto3.resource('s3')
+# translate
 translate = boto3.client('translate')
-translate_df = pd.read_csv('./translate.csv')
+#comprehend
+comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
+
+#translate.csv
+s3.meta.client.download_file(appbucket, appkey, 'translate.csv')
+translate_df = pd.read_csv('translate.csv')
 translate_num = translate_df.shape[0]
 translate_list = []
 for i in range(0, translate_num):
     translate_list.append(translate_df.iloc[i, 0])
-print(translate_list)
-
-#comprehend
-comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
 
 #处理app.csv
-s3 = boto3.resource('s3')
-appbucket = os.environ.get('appbucket')
-appkey = os.environ.get('appkey')
 s3.meta.client.download_file(appbucket, appkey, 'app.csv')
 app_df = pd.read_csv('app.csv')
 app_num = app_df.shape[0]
@@ -220,15 +217,15 @@ for i in range(0,app_num):
     sql_cmd = "select * from customer_reviews_temp where id not in (select id from customer_reviews);"
     reviews_df = pd.read_sql(sql=sql_cmd, con=connect)
     reviews_df = reviews_df.loc[ reviews_df['content'].str.len() > 0 ]
-    reviews_df = reviews_df.loc[ reviews_df['content'].str.len() < 2000]
+    reviews_df = reviews_df.loc[ reviews_df['content'].str.len() < 1000]
     num = reviews_df.shape[0]
     if num > 0:
         print('-------------------------------------------------------------')
         print("%s %s %s %s 有 %d 条新增评论 ... " % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3],num))
-        # reviews_df['lang'] = reviews_df.apply(do_detect_language, axis=1)
-        # reviews_df['sentiment'] = reviews_df.apply(do_detect_sentiment, axis=1)
-        # reviews_df['content_cn'] = reviews_df.apply(do_translate, axis=1)
-        # reviews_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
+        reviews_df['lang'] = reviews_df.apply(do_detect_language, axis=1)
+        reviews_df['sentiment'] = reviews_df.apply(do_sentiment, axis=1)
+        reviews_df['content_cn'] = reviews_df.apply(do_translate, axis=1)
+        reviews_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
         print('评论处理完毕')
         print('-------------------------------------------------------------')
     else:
