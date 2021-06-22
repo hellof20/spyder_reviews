@@ -68,7 +68,7 @@ class App(object):
                 "User-Agent": "iTunes/11.0 (Windows; Microsoft Windows 7 Business Edition Service Pack 1 (Build 7601)) AppleWebKit/536.27.1"}
             url = 'https://itunes.apple.com/WebObjects/MZStore.woa/wa/userReviewsRow?cc=' + str(
                 self.country) + '&id=' + str(
-                self.appid) + '&displayable-kind=11&startIndex=0&endIndex=100000&sort=0&appVersion=all'
+                self.appid) + '&displayable-kind=11&startIndex=0&endIndex=5000&sort=0&appVersion=all'
             data = {}
             params = urllib.parse.urlencode(data).encode(encoding='UTF8')
             request = urllib.request.Request(url, params, headers)
@@ -106,7 +106,7 @@ class App(object):
             BASE_URL = 'https://api.taptapdada.com/review/v1/by-app?sort=new&app_id={}' \
                 '&X-UA=V%3D1%26PN%3DTapTap%26VN_CODE%3D593%26LOC%3DCN%26LANG%3Dzh_CN%26CH%3Ddefault' \
                 '%26UID%3D8a5b2b39-ad33-40f3-8634-eef5dcba01e4%26VID%3D7595643&from={}'
-            end_from = 200
+            end_from = 2000
             reviews = []
             reviews_result_list = []
             for i in range(0, end_from+1, 10):
@@ -156,20 +156,19 @@ def logger_error(logs):
     f.write("\t".join(write_logs) + '\n')
     f.close()
 
-def do_translate(df):
-    content = df['content']
-    code = df['lang']
-    try:
-        if code in translate_list:
-            response = translate.translate_text(
-                Text=content,
-                SourceLanguageCode=code,
-                TargetLanguageCode='zh')
-            return response['TranslatedText']
-    except BaseException as e:
-        print("不支持翻译的语言")
-        logger_error([df['appname'], df['platform'], '翻译不支持的语言  id：' + df['id'], ' 内容：'+ df['content']])        
-    
+# def do_translate(df):
+#     content = df['content']
+#     code = df['lang']
+#     try:
+#         response = translate.translate_text(
+#             Text=content,
+#             SourceLanguageCode=code,
+#             TargetLanguageCode='zh')
+#         return response['TranslatedText']
+#     except BaseException as e:
+#         print("不支持翻译的语言")
+#         logger_error([df['appname'], df['platform'], '翻译不支持的语言  id：' + df['id'], ' 内容：'+ df['content']])        
+
 def do_detect_language(df):
     content = df['content']
     language_code = comprehend.detect_dominant_language(Text=content)
@@ -193,48 +192,50 @@ rdspassword = os.environ.get('rdspassword')
 database = os.environ.get('rdsdatabase')
 connect = create_engine('mysql+pymysql://' + rdsuser + ':' + rdspassword + '@' + rdshost + ':3306/' + database + '?charset=utf8mb4')
 appbucket = os.environ.get('appbucket')
-# appkey = os.environ.get('appkey')
+appkey = os.environ.get('appkey')
 #s3
 s3 = boto3.resource('s3')
 # translate
-translate = boto3.client('translate', region_name=os.environ.get('region'))
+# translate = boto3.client('translate', region_name=os.environ.get('region'))
 #comprehend
 comprehend = boto3.client('comprehend', region_name=os.environ.get('region'))
 
 #translate.csv
-s3.meta.client.download_file(appbucket, 'translate.csv', 'translate.csv')
-translate_df = pd.read_csv('translate.csv')
-translate_num = translate_df.shape[0]
-translate_list = []
-for i in range(0, translate_num):
-    translate_list.append(translate_df.iloc[i, 0])
+# s3.meta.client.download_file(appbucket, 'translate.csv', 'translate.csv')
+# translate_df = pd.read_csv('./translate.csv')
+# translate_num = translate_df.shape[0]
+# translate_list = []
+# for i in range(0, translate_num):
+#     translate_list.append(translate_df.iloc[i, 0])
 
 #处理app.csv
-s3.meta.client.download_file(appbucket, 'app.csv', 'app.csv')
-app_df = pd.read_csv('app.csv')
+s3.meta.client.download_file(appbucket, appkey, 'app.csv')
+app_df = pd.read_csv('./app.csv')
 app_num = app_df.shape[0]
 
 for i in range(0,app_num):
     print('-------------------------------------------------------------')
     print("开始下载%s %s %s %s 的评论 ... " % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3]))
     app = App(app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3])
+    # print(app.reviews())
     #插入所有评论到customer_reviews_temp表
     write_mysql(connect, app.reviews(), 'customer_reviews_temp')
     print("%s %s %s %s 的评论下载完成" % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3]))
     #获取增量评论
-    sql_cmd = "select id,appid,appname,country,country,platform,date,name,title,content,rating from customer_reviews_temp where id not in (select id from customer_reviews) and appid = '"+app_df.iloc[i,3]+"';"
+    sql_cmd = "select id,appid,appname,country,country,platform,date,name,title,content,rating from customer_reviews_temp where id not in (select id from customer_reviews) and appid = '"+str(app_df.iloc[i,3])+"';"
     reviews_df = pd.read_sql(sql=sql_cmd, con=connect)
     reviews_df = reviews_df.loc[ reviews_df['content'].str.len() > 0 ]
     reviews_df = reviews_df.loc[ reviews_df['content'].str.len() < 1000]
     num = reviews_df.shape[0]
     if num > 0:
         print("%s %s %s %s 有 %d 条新增评论 ... " % (app_df.iloc[i,0],app_df.iloc[i,1],app_df.iloc[i,2],app_df.iloc[i,3],num))
+        # if app_df.iloc[i,2] in translate_list:
         print('开始识别评论内容语言...')
         reviews_df['lang'] = reviews_df.apply(do_detect_language, axis=1)
         print('开始识别评论内容情感分析...')
         reviews_df['sentiment'] = reviews_df.apply(do_sentiment, axis=1)
-        print('翻译评论内容')
-        reviews_df['content_cn'] = reviews_df.apply(do_translate, axis=1)
+        # print('翻译评论内容')
+        # reviews_df['content_cn'] = reviews_df.apply(do_translate, axis=1)
         reviews_df.to_sql('customer_reviews', connect, index=False, if_exists='append')
         print('评论处理完毕')
     else:
